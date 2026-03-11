@@ -16,7 +16,6 @@ envs/
 # 仮想環境
 venv/
 
-#その他
 # Jupyter Notebookのチェックポイント
 .ipynb_checkpoints/
 
@@ -24,3 +23,6 @@ venv/
 .vscode/
 .idea/
 *.code-workspace
+
+#その他
+学習用データ/
