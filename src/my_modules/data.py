@@ -73,7 +73,7 @@ class DefaultData(Data):
             try:
                 checkedDatas = CheckDefaultData(distance=distance, condition=condition, runningDist=runningDist)
                 distance_conditions += [[checkedDatas.distance, checkedDatas.condition]]
-                runningDists = [[checkedDatas.runningDist]]
+                runningDists += [[checkedDatas.runningDist]]
             
             except ValidationError:
                 ERROR_ITEMS = f"\n入力内容：[{distance_colName}:{distance}, {condition_colName}:{condition}, {runningDist_colName}:{runningDist}]"
