@@ -24,5 +24,8 @@ venv/
 .idea/
 *.code-workspace
 
+#データベース
+*.db
+
 #その他
 学習用データ/
