@@ -4,9 +4,9 @@ from .data import DefaultData
 from .models import DefaultModel
 
 class AIFacade:
-    def __init__(self, filePass):
+    def __init__(self,):
         #サブシステムクラスのセット
-        self.data = DefaultData(filePass)
+        self.data = DefaultData()
         self.newModel = DefaultModel()
     
     def load_TrainingData(self):
