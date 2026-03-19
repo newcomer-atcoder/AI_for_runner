@@ -15,17 +15,19 @@ class DBSetUp:
         #エンジン作成時点で.dbファイルが自動作成されるため、ファイルの存在チェックが不要
         engine = create_engine(
             url=f"sqlite:///{DB_PATH}",
-            echo=True
         )
 
         self.engine = engine
 
 
-    def check_table_exists(self) -> bool:
+    def setUp_Done(self):
         #テーブルの有無をチェック
         #DBファイルがない場合はここで自動生成される
         tables = inspect(self.engine).get_table_names()
-        return tables
-    
-    def createTable(self):
-        Base.metadata.create_all(self.engine)
+        
+        if not tables:
+            print("初回セットアップ実行")
+            Base.metadata.create_all(self.engine)
+        else:
+            print("設定済みのデータベースがありました")
+        return not tables

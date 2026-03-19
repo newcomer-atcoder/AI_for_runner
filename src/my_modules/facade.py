@@ -4,14 +4,14 @@ from .data import DefaultData
 from .models import DefaultModel
 
 class AIFacade:
-    def __init__(self,):
+    def __init__(self):
         #サブシステムクラスのセット
         self.data = DefaultData()
         self.newModel = DefaultModel()
     
-    def load_TrainingData(self):
+    def load_TrainingData(self, engine, RunDist):
         #学習用データを読み取り指示
-        self.data.load_TrainingData()
+        self.data.load_TrainingData(engine, RunDist)
     
     def trainingDone(self):
         #機械学習指示

@@ -2,10 +2,8 @@
 
 import torch
 from abc import ABC, abstractmethod
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session
-from .db.dbmodels import RunDist
-from .db.settings import DB_PATH
+from sqlalchemy import select, Engine
+from sqlalchemy.orm import Session, DeclarativeBase
 
 class Data(ABC):
     @abstractmethod
@@ -19,17 +17,12 @@ class Data(ABC):
 #初期(Default)ver
 #「走行予定の距離(km)」「体調(%)」「実走距離(%)」を管理
 class DefaultData(Data):
-    def load_TrainingData(self):
+    def load_TrainingData(self, engine : Engine, RunDist : DeclarativeBase):
         #フィールド値の初期化
         distance_conditions = []
         runningDists = []
         
         #DBから全件取得
-        engine = create_engine(
-            url=f"sqlite:///{DB_PATH}",
-            echo=True
-        )
-
         with Session(engine) as session:
             stmt = select(RunDist)
             TrainingDatas = session.scalars(statement=stmt)

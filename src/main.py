@@ -2,6 +2,7 @@
 
 #自作モジュール
 from my_modules.db.settings import DBSetUp
+from my_modules.db.dbmodels import RunDist
 from my_modules.internal_code.insert import EnterCMD
 from my_modules.facade import AIFacade
 
@@ -19,11 +20,9 @@ OUTPUT_RUNNING_DISTANCE = "本日のあなたの適正距離(km):"
 
 def main():
     #DBの初回セットアップ(バックグラウンド処理)
-    #DBがテーブルなしの初期状態であればセットアップ
     dbsetup = DBSetUp()
-    dbsetup_flg = not dbsetup.check_table_exists()
-    if dbsetup_flg:
-        dbsetup.createTable()
+    dbsetup_flg = dbsetup.setUp_Done()
+    engine = dbsetup.engine
 
     #アプリ起動(ユーザ側に最初に表示)
     print(HELLO)
@@ -38,12 +37,11 @@ def main():
     if isInput_my_rundata:
         cmd_mode = EnterCMD(dbsetup_flg)
         cmd_mode.input_runData()
-        if cmd_mode.checkedValueList:
-            cmd_mode.insert_into_db()
+        cmd_mode.insert_into_db(engine, RunDist)
     
     #AI処理のファサード(窓口)を生成し、AIに学習用データ(Csv)を機械学習させる
     aiFacade = AIFacade()
-    aiFacade.load_TrainingData()
+    aiFacade.load_TrainingData(engine, RunDist)
     aiFacade.trainingDone()
     
     #ユーザー入力、ファサード(窓口)に処理依頼、推論値出力

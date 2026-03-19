@@ -1,13 +1,10 @@
-from ..db.dbmodels import RunDist, DIST_MIN_VALUE, CONDITION_MIN_VALUE, CONDITION_MAX_VALUE
-from ..db.settings import DB_PATH
-
 import sys
 from pydantic import BaseModel, Field, ValidationError
 from typing import Union
 import datetime
 import re
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy import Engine
+from sqlalchemy.orm import Session, DeclarativeBase
 
 #定数(会話プロンプト)
 PLEASE_INPUT_YOUR_RUNDATA = "\n「日付(yyyy/mm/dd)」「走行予定の距離(km)」「体調(%)」「実際に走った距離(km)」を、半角スペース区切りで入力してください\n(入力を終了する場合は「q」を入力):"
@@ -22,6 +19,7 @@ DATE_INDEX = 0
 DISTANCE_INDEX = 1
 CONDITION_INDEX = 2
 RUNNINGDIST_INDEX = 3
+DIST_MIN_VALUE, CONDITION_MIN_VALUE, CONDITION_MAX_VALUE = 0, 0, 100 #0km, 0~100%
 
 #DBに登録する値のチェック用
 class ValueCheck(BaseModel):
@@ -64,16 +62,10 @@ class EnterCMD:
         
         self.checkedValueList = checkedValueList
     
-    def insert_into_db(self):
-        engine = create_engine(
-            url=f"sqlite:///{DB_PATH}",
-            echo=True
-        )
-
+    def insert_into_db(self, engine : Engine, RunDist : DeclarativeBase):
         with Session(engine) as session:
             inserts = []
             for checkedValues in self.checkedValueList:
                 inserts += [RunDist(date=checkedValues.date, distance=checkedValues.distance, condition=checkedValues.condition, runningDist=checkedValues.runningDist)]
             session.add_all(inserts)
             session.commit()
-                
