@@ -1,59 +1,101 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Feb  9 19:17:06 2026
-
-@author: runningAI
-"""
 
 from src.my_modules.data import DefaultData
-import pytest
-import pandas
+from src.my_modules import data
+from sqlalchemy import create_engine, select, Integer, Float, Date, CheckConstraint as check
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+import datetime
+from pathlib import Path
+import torch
 
+#テスト環境作成
+DIST_MIN_VALUE = 0 #0km
+CONDITION_MIN_VALUE = 0 #0%
+CONDITION_MAX_VALUE = 100 #100%
+DB_PATH = Path(__file__).parent/"test5.db"
+TEST_DATA_DISTANCE_CONDITIONS = [
+    [5.0, 50.0],
+    [11.0, 60.0]
+]
+TEST_DATA_RUNNINGDISTS = [
+    [5.0],
+    [7.0]
+]
+
+
+class Base(DeclarativeBase):
+    pass
+
+class MocRunDist(Base):
+    __tablename__ = "runDist"
+
+    #カラム定義
+
+    #自動採番
+    id : Mapped[int] = mapped_column(
+        Integer,
+        check("id > 0"),
+        primary_key=True
+    )
+
+    date : Mapped[datetime.date] = mapped_column(
+        Date,
+        nullable=True
+    )
+
+    distance : Mapped[float] = mapped_column(
+        Float,
+        check(f"distance >= {DIST_MIN_VALUE}"),
+        nullable=False
+    )
+
+    condition : Mapped[int] = mapped_column(
+        Float,
+        check(f"{CONDITION_MIN_VALUE} <= condition AND condition <= {CONDITION_MAX_VALUE}"),
+        nullable=False
+    )
+
+    runningDist : Mapped[float] = mapped_column(
+        Float,
+        check(f"runningDist >= {DIST_MIN_VALUE}"),
+        nullable=False
+    )
+
+def setUpTestEnv(engine):
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        registor = []
+        for [distance, condition], [runningDist] in zip(TEST_DATA_DISTANCE_CONDITIONS, TEST_DATA_RUNNINGDISTS):
+            registor += [MocRunDist(distance=distance, condition=condition, runningDist=runningDist)]
+        session.add_all(registor)
+        session.commit()
+
+
+#ここからテストコード
 #1.load_TrainingDataメソッド
-
-#前提1.テストケースの入力は、Csvファイルで行う(実際のデータ入力と同じ)
-#前提2.Csvファイルには1ファイル1行で入力
-#試験観点：ファイルの入力内容と、self.distance_conditionsとself.runnningDistsの内容が合致すること。
-#　　　　　　ファイル内の数値が入力制限を満たすこと
-#　　　　　　※エラーメッセージが出力されればOKとする
-
-ERROR_POSI_MSG = "{}の{}行目。"
-ERROR_ALERT_MSG = "\n不正な入力を検知しました。アプリを再起動して、学習用データファイルを修正してください。\
-                   \n修正の際、以下にご注意ください。\
-                   \n1.全角文字や半角英字は数値に変換できません。\
-                   \n2.入力値の制限をご確認ください。\
-                   \n　-距離(km)：0以上の数値(非負整数)\
-                   \n　-体調(%)：0~100の整数値"
-ERROR_ITEMS = "\n入力内容：[走行予定の距離(km):{}, 体調(%):{}, 実走距離(km):{}]"
-FILE_PATH = "学習用データ\テスト用\テストデータ(load_TrainigData){}.csv" #ローカル配置、非公開
-FILE_NAME = "テストデータ(load_TrainigData){}.csv" #ローカル配置、非公開
-
-def test_load_TrainingData():
-    #正常パターン
-    #期待値
-    distance, condition = 7.0, 40.0
-    runningDist = 5.0
-    #結果
-    testDefaultData = DefaultData(FILE_PATH.format("1"))
-    testDefaultData.load_TrainingData()
-    [result_distance, result_condition] = testDefaultData.distance_conditions_Tensor[0]
-    [result_runningDist] = testDefaultData.runningDists_Tensor[0]
-
-    assert [distance, condition] == [result_distance, result_condition]
-    assert result_runningDist == runningDist
+def test_load_TrainingData(monkeypatch):
+    engine = create_engine(
+        url=f"sqlite:///{DB_PATH}",
+        echo=True
+    )
+    if not DB_PATH.exists():
+        setUpTestEnv(engine)
     
-    #エラーパターン
-    #数値が境界値外である
-    #走行予定の距離(km) < 0 or 体調(%) < 0 or 体調(%) > 100 or 実走距離(km) < 0
-    #数値以外の入力
-    #未入力項目
-    for fileNum in range(2, 9):
-        filePath = FILE_PATH.format(str(fileNum))
-        with pytest.raises(ValueError) as e:
-            testDefaultData = DefaultData(filePath)
-            testDefaultData.load_TrainingData()
-        
-        df = pandas.read_csv(filePath)
-        distance, condition, runnningDist = df.iloc[0, 1:] #1行目の読み込みでエラーが出る前提
-        assert str(e.value) == ERROR_POSI_MSG.format(FILE_NAME.format(str(fileNum)), "2") +\
-            ERROR_ITEMS.format(distance, condition, runnningDist) + ERROR_ALERT_MSG
+    #期待値
+    exp_distance_conditions = torch.tensor(TEST_DATA_DISTANCE_CONDITIONS, dtype=torch.float32)
+    exp_runningDists = torch.tensor(TEST_DATA_RUNNINGDISTS, dtype=torch.float32)
+
+    #結果
+    testData = DefaultData()
+    testData.load_TrainingData(engine, MocRunDist)
+    
+    for exps, results in zip(exp_distance_conditions, testData.distance_conditions_Tensor):
+        for i, exp in enumerate(exps):
+            assert exp == results[i]
+    
+    for exps, results in zip(exp_runningDists, testData.runningDists_Tensor):
+        for i, exp in enumerate(exps):
+            assert exp == results[i]
+
+    
