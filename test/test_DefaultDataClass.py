@@ -61,12 +61,7 @@ class MocRunDist(Base):
         nullable=False
     )
 
-def setUpTestEnv():
-    engine = create_engine(
-        url=f"sqlite:///{DB_PATH}",
-        echo=True
-    )
-
+def setUpTestEnv(engine):
     Base.metadata.create_all(engine)
 
     with Session(engine) as session:
@@ -80,17 +75,20 @@ def setUpTestEnv():
 #ここからテストコード
 #1.load_TrainingDataメソッド
 def test_load_TrainingData(monkeypatch):
+    engine = create_engine(
+        url=f"sqlite:///{DB_PATH}",
+        echo=True
+    )
     if not DB_PATH.exists():
-        setUpTestEnv()
+        setUpTestEnv(engine)
     
     #期待値
     exp_distance_conditions = torch.tensor(TEST_DATA_DISTANCE_CONDITIONS, dtype=torch.float32)
     exp_runningDists = torch.tensor(TEST_DATA_RUNNINGDISTS, dtype=torch.float32)
 
     #結果
-    monkeypatch.setattr(data, "DB_PATH", DB_PATH)
     testData = DefaultData()
-    testData.load_TrainingData()
+    testData.load_TrainingData(engine, MocRunDist)
     
     for exps, results in zip(exp_distance_conditions, testData.distance_conditions_Tensor):
         for i, exp in enumerate(exps):

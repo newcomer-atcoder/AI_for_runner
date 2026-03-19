@@ -95,7 +95,6 @@ def test_insert_into_db(monkeypatch):
     if not DB_PATH.exists():
         Base.metadata.create_all(engine)
     
-    monkeypatch.setattr(insert, "DB_PATH", DB_PATH)
     testInsert = EnterCMD(True)
 
     #期待値
@@ -107,7 +106,7 @@ def test_insert_into_db(monkeypatch):
     #結果
     #期待値通りの値を登録できるか
     testInsert.checkedValueList = exp_values
-    testInsert.insert_into_db()
+    testInsert.insert_into_db(engine, MocRunDist)
     
     with Session(engine) as session:
         stmt = select(MocRunDist)
