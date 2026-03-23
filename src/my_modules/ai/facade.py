@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .data import DefaultData
+from ..data.loader import DefaultData
 from .models import DefaultModel
 
 class AIFacade:

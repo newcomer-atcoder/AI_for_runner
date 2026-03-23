@@ -1,6 +1,6 @@
 from pathlib import Path
 from sqlalchemy import create_engine, inspect
-from .dbmodels import Base
+from .models import Base
 
 #定数
 NO_DB_OR_TABLES = False

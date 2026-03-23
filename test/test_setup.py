@@ -1,14 +1,14 @@
-from src.my_modules.db.settings import DBSetUp
-from src.my_modules.db import settings
+from src.my_modules.database.setup import DBSetUp
+from src.my_modules.database import setup
 from pathlib import Path
 import pytest
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import String, create_engine
 
 #モック作成
-MOC_DB_PATH1 = Path(__file__).parent/"test1.db"
-MOC_DB_PATH2 = Path(__file__).parent/"test2.db"
-MOC_DB_PATH3 = Path(__file__).parent/"test3.db"
+MOC_DB_PATH1 = Path(__file__).parent/"testDB"/"test1.db"
+MOC_DB_PATH2 = Path(__file__).parent/"testDB"/"test2.db"
+MOC_DB_PATH3 = Path(__file__).parent/"testDB"/"test3.db"
 class MocBase(DeclarativeBase):
     pass
 
@@ -29,9 +29,9 @@ def test_setUp_Done(monkeypatch):
 
     #1.DBがない時
     #2.DBが既にある時
-    monkeypatch.setattr(settings, "Base", MocBase)
+    monkeypatch.setattr(setup, "Base", MocBase)
     for moc_db, exp in zip([MOC_DB_PATH1, MOC_DB_PATH2], [True, False]):
-        monkeypatch.setattr(settings, "DB_PATH", moc_db)
+        monkeypatch.setattr(setup, "DB_PATH", moc_db)
         db = DBSetUp()
         result = db.setUp_Done()
         assert result == exp

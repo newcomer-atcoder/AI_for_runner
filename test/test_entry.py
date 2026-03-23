@@ -2,8 +2,8 @@ from sqlalchemy import create_engine, select, Integer, Float, Date, CheckConstra
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from pathlib import Path
 
-from src.my_modules.internal_code.insert import EnterCMD, ValueCheck
-from src.my_modules.internal_code import insert
+from src.my_modules.data.entry import EnterCMD, ValueCheck
+from src.my_modules.data import entry
 
 import datetime
 import sys
@@ -46,7 +46,7 @@ def test_input_runData():
 DIST_MIN_VALUE = 0
 CONDITION_MIN_VALUE = 0
 CONDITION_MAX_VALUE = 100
-DB_PATH = Path(__file__).parent/"test6.db"
+DB_PATH = Path(__file__).parent/"testDB"/"test6.db"
 
 class Base(DeclarativeBase):
     pass

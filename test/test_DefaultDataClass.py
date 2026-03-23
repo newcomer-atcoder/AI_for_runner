@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from src.my_modules.data import DefaultData
-from src.my_modules import data
+from src.my_modules.data.loader import DefaultData
 from sqlalchemy import create_engine, select, Integer, Float, Date, CheckConstraint as check
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 import datetime
@@ -12,7 +11,7 @@ import torch
 DIST_MIN_VALUE = 0 #0km
 CONDITION_MIN_VALUE = 0 #0%
 CONDITION_MAX_VALUE = 100 #100%
-DB_PATH = Path(__file__).parent/"test5.db"
+DB_PATH = Path(__file__).parent/"testDB"/"test5.db"
 TEST_DATA_DISTANCE_CONDITIONS = [
     [5.0, 50.0],
     [11.0, 60.0]
