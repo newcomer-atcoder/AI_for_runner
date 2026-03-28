@@ -58,7 +58,7 @@ def main():
             print(OUTPUT_RUNNING_DISTANCE)
             print(float(x))
         
-        except ValueError:
+        except (ValueError, TypeError):
             print(NAN_MSG)
 
 if __name__ == "__main__":

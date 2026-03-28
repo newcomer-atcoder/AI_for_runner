@@ -3,6 +3,14 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from pydantic import BaseModel, Field, ValidationError
+
+#推論処理の入力値のチェック用
+DIST_MIN_VALUE, CONDITION_MIN_VALUE, CONDITION_MAX_VALUE = 0, 0, 100 #0km, 0~100%
+class ValueCheck_Inference(BaseModel):
+    distance : float = Field(ge=DIST_MIN_VALUE)
+    condition : float = Field(ge=CONDITION_MIN_VALUE, le=CONDITION_MAX_VALUE)
+    
 
 #my_modules.data.DefaultDataで取得した「デフォルト形式」のデータを学習
 #※以下のコメントは、AIが生成したコードを開発者が理解・イメージ内容を記載しているため
@@ -38,6 +46,13 @@ class DefaultModel:
         self.model = model
     
     def inference(self, distance, condition):
+        #入力制限を満たすか確認する
+        try:
+            inputs = ValueCheck_Inference(distance=distance, condition=condition)
+        
+        except (ValidationError, IndexError, ValueError):
+            return None
+
         #「実走距離(km)」の推論、ランナーに「おすすめの距離(km)」として返却
-        distance_condition = torch.tensor([[distance, condition]])
+        distance_condition = torch.tensor([[inputs.distance, inputs.condition]])
         return self.model(distance_condition)
