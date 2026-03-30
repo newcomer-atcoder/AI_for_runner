@@ -15,7 +15,7 @@ class Data(ABC):
         pass
 
 #初期(Default)ver
-#「走行予定の距離(km)」「体調(%)」「実走距離(%)」を管理
+#「走行予定の距離(km)」「体調(%)」「実際に走った距離(km)」を管理
 class DefaultData(Data):
     def load_TrainingData(self, engine : Engine, RunDist : DeclarativeBase):
         #フィールド値の初期化
@@ -27,7 +27,7 @@ class DefaultData(Data):
             stmt = select(RunDist)
             TrainingDatas = session.scalars(statement=stmt)
         
-            #「走行予定の距離(km)」「体調(%)」と「実走距離(%)」をそれぞれの配列にセット
+            #「走行予定の距離(km)」「体調(%)」と「実際に走った距離(km)」をそれぞれの配列にセット
             for TrainingData in TrainingDatas:
                 distance_conditions += [[TrainingData.distance, TrainingData.condition]]
                 runningDists += [[TrainingData.runningDist]]

@@ -12,7 +12,7 @@ class ValueCheck_Inference(BaseModel):
     condition : float = Field(ge=CONDITION_MIN_VALUE, le=CONDITION_MAX_VALUE)
     
 
-#my_modules.data.DefaultDataで取得した「デフォルト形式」のデータを学習
+#my_modules.data.loader.DefaultDataで取得した「デフォルト形式」のデータを学習
 #※以下のコメントは、AIが生成したコードを開発者が理解・イメージ内容を記載しているため
 #　正確ではない内容を含みます
 class DefaultModel:
@@ -53,6 +53,6 @@ class DefaultModel:
         except (ValidationError, IndexError, ValueError):
             return None
 
-        #「実走距離(km)」の推論、ランナーに「おすすめの距離(km)」として返却
+        #「実際に走る距離(km)」の推論、ランナーに「本日のあなたの適正距離(km)」として返却
         distance_condition = torch.tensor([[inputs.distance, inputs.condition]])
         return self.model(distance_condition)

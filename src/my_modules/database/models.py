@@ -10,7 +10,7 @@ CONDITION_MAX_VALUE = 100 #100%
 class Base(DeclarativeBase):
     pass
 
-#「id (primary_key)」「日付」「走行予定の距離(km)」「体調(%)」「実走距離(%)」
+#「id (primary_key)」「日付」「走行予定の距離(km)」「体調(%)」「実際に走った距離(km)」
 class RunDist(Base):
     __tablename__ = "runDist"
 
