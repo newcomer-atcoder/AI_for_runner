@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 #自作モジュール
-from my_modules.db.settings import DBSetUp
-from my_modules.db.dbmodels import RunDist
-from my_modules.internal_code.insert import EnterCMD
-from my_modules.facade import AIFacade
+from my_modules.database.setup import DBSetUp
+from my_modules.database.models import RunDist
+from my_modules.data.entry import EnterCMD
+from my_modules.ai.facade import AIFacade
 
 #定数(会話プロンプト)
 HELLO = "こんにちは、あなたのランニングを支援します"
@@ -58,7 +58,7 @@ def main():
             print(OUTPUT_RUNNING_DISTANCE)
             print(float(x))
         
-        except ValueError:
+        except (ValueError, TypeError):
             print(NAN_MSG)
 
 if __name__ == "__main__":

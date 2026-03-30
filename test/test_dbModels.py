@@ -1,5 +1,4 @@
-from src.my_modules.db import dbmodels
-from src.my_modules.db.dbmodels import Base, RunDist
+from src.my_modules.database.models import Base, RunDist
 from sqlalchemy import create_engine, inspect, delete, select
 from sqlalchemy.orm import Session
 from pathlib import Path
@@ -9,7 +8,7 @@ from sqlalchemy.exc import DataError, IntegrityError, StatementError
 
 def test_dbColumns(monkeypatch):
     #まずはrundistテーブルを生成しておく
-    DB_DIR = Path(__file__).parent/"test4.db"
+    DB_DIR = Path(__file__).parent/"testDB"/"test4.db"
     engine = create_engine(
         url=f"sqlite:///{DB_DIR}",
         echo=True
