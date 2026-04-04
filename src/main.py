@@ -3,63 +3,135 @@
 #自作モジュール
 from my_modules.database.setup import DBSetUp
 from my_modules.database.models import RunDist
-from my_modules.data.entry import EnterCMD
+from my_modules.data.entry import EntryRunData, ValueCheck
 from my_modules.ai.facade import AIFacade
 
-#定数(会話プロンプト)
-HELLO = "こんにちは、あなたのランニングを支援します"
-ASK_YOU_INPUT_YOUR_RUNDATA = "AIに過去のランニング記録を入力しますか (y/n):"
-INPUT_MY_RUNDATA = "y"
-YOU_MUST_INPUT_YOUR_RUNDATA = "DBの初回セットアップが完了しました\n続けてAIに過去のランニング記録を入力してください"
-PLEASE_INPUT_DISTANCE_AND_CONDITION = "\n「走行予定の距離(km)」「体調(%)」を、半角スペース区切りで入力してください\n(入力を終了する場合は「q」を入力):"
-EXIT_CMD = "q"
-EXIT_AI = "AIを終了します"
-NAN_MSG = "数値ではない値が入力されました。あるいは入力が不足しています。再入力してください。"
-OUTPUT_RUNNING_DISTANCE = "本日のあなたの適正距離(km):"
+#APIライブラリ
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, Response
 
+#その他
+import uvicorn
+from pathlib import Path
+import time
+from concurrent.futures import ThreadPoolExecutor as thread
+import webbrowser
 
-def main():
-    #DBの初回セットアップ(バックグラウンド処理)
-    dbsetup = DBSetUp()
-    dbsetup_flg = dbsetup.setUp_Done()
-    engine = dbsetup.engine
+#APIサーバ準備
+app = FastAPI()
 
-    #アプリ起動(ユーザ側に最初に表示)
-    print(HELLO)
-    if not dbsetup_flg:
-        print(ASK_YOU_INPUT_YOUR_RUNDATA)
-        isInput_my_rundata = input() == INPUT_MY_RUNDATA
+#jsファイルの設定
+app_dir = Path(__file__).parent
+app.mount('/static', StaticFiles(directory=app_dir/'webApp'/'static'), 'url_static')
+
+#htmlとパスの設定
+htmlTemp = Jinja2Templates(directory=app_dir/'webApp'/'templates')
+
+init_html = 'app_init.html'; init_path = '/';
+entry_html = 'app_entry.html'; entry_path = 'entry';
+inference_html = 'app_inference.html'; inference_path = 'inference';
+code200_pairs = {
+    entry_path : entry_html,
+    inference_path : inference_html
+}
+
+exit_app_path = '/exit/'
+exit_entry_path = '/updateDB/'
+notFound_html = 'notFound.html'
+
+#faviconを回避
+@app.get('/favicon.ico')
+def favicon():
+    return Response(status_code=204)  # No Content
+
+#アプリ実行直後にapp_init画面を表示
+dbsetup = DBSetUp()
+dbsetup_flg = dbsetup.setUp_Done()
+def loadApp():
+    time.sleep(3)
+    webbrowser.open('http://127.0.0.1:8000')
+
+@app.get(init_path, response_class=HTMLResponse)
+def init_app(request : Request):
+    return htmlTemp.TemplateResponse(
+        init_html,
+        {'request' : request, 'dbsetup_flg' : dbsetup_flg}
+    )
+
+#app_entry/app_inference画面にリダイレクト
+#上記とapp_init画面以外は404例外
+aiFacade = AIFacade()
+@app.get('/{path_id}/', response_class=HTMLResponse)
+def goto_nextPage(request : Request, path_id, result=None):
+    if path_id not in code200_pairs:
+        raise HTTPException(status_code=404)
+    
+    if path_id == inference_path and result == None:
+        #機械学習
+        aiFacade.load_TrainingData(dbsetup.engine, RunDist)
+        aiFacade.trainingDone()
+
+    return_dict = {'request' : request, 'result' : '' if result is None else result}
+    return htmlTemp.TemplateResponse(
+        code200_pairs[path_id],
+        return_dict
+    )
+
+#404 Not Found
+@app.exception_handler(404)
+def not_found_handler(request: Request, exc):
+    return htmlTemp.TemplateResponse(
+        notFound_html,
+        {'request': request},
+        status_code=404
+    )
+
+#app_entry画面の入力を受ける
+#422例外はjsで吸収
+myRunData = EntryRunData(dbsetup_flg)
+@app.post(f'/{entry_path}/')
+def entry_runData(runData : ValueCheck):
+    myRunData.add_runData(runData)
+    return {
+            'entry_result' : f'登録成功 : {runData.yyyy}/{runData.mm}/{runData.dd}, {runData.distance}km, {runData.condition}%, {runData.runningDist}km'
+    }
+
+#app_entry画面の登録終了時に、内部ではDBInsertを行う
+#AIFacadeの準備(データ変換と機械学習)も行う
+@app.post(exit_entry_path)
+def exitEntry():
+    #DB更新
+    myRunData.insert_into_db(dbsetup.engine, RunDist)
+    return {'entry_exit_result' : 'DB更新&機械学習完了'}
+
+#app_inference画面の入力を受ける
+#422例外はjsで吸収
+@app.post(f'/{inference_path}/')
+def inference(distance : float, condition : float):
+    result_value = aiFacade.inference(distance, condition)
+    if result_value is None:
+        result_info = '数値ではない値が入力されました。あるいは入力が不足しています。再入力してください'
     else:
-        #DBセットアップ時はランニング記録の入力必須
-        print(YOU_MUST_INPUT_YOUR_RUNDATA)
-        isInput_my_rundata = True
-    
-    if isInput_my_rundata:
-        cmd_mode = EnterCMD(dbsetup_flg)
-        cmd_mode.input_runData()
-        cmd_mode.insert_into_db(engine, RunDist)
-    
-    #AI処理のファサード(窓口)を生成し、AIに学習用データ(Csv)を機械学習させる
-    aiFacade = AIFacade()
-    aiFacade.load_TrainingData(engine, RunDist)
-    aiFacade.trainingDone()
-    
-    #ユーザー入力、ファサード(窓口)に処理依頼、推論値出力
-    while 1:
-        try:
-            print(PLEASE_INPUT_DISTANCE_AND_CONDITION)
-            input_datas = input()
-            if input_datas == EXIT_CMD:
-                print(EXIT_AI)
-                break
-            
-            distance, condition = map(float, input_datas.split())
-            x = aiFacade.inference(distance, condition)
-            print(OUTPUT_RUNNING_DISTANCE)
-            print(float(x))
-        
-        except (ValueError, TypeError):
-            print(NAN_MSG)
+        result_info = f'本日のあなたの適正距離(km)：{result_value}km'
+    result_info += f'(あなたの入力：{distance}km＆{condition}%)'
+    return {
+            'inference_result' : result_info
+    }
+
+#アプリ終了ボタン
+@app.post(exit_app_path)
+def exitApp():
+    app.state.server.should_exit = True
+    return {'message': 'exit app'}
 
 if __name__ == "__main__":
-    main()
+    config = uvicorn.Config(app, host='127.0.0.1', port=8000)
+    server = uvicorn.Server(config)
+    app.state.server = server
+
+    with thread(max_workers=2) as executor:
+        executor.submit(loadApp)
+        executor.submit(server.run)
+    

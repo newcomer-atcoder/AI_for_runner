@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>app init page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Meiryo", sans-serif;
+      background-color: #cfefff; /* 画面全体の薄い水色 */
+      height: 100vh;
+      display: flex;
+      justify-content: center;  /* 横方向中央 */
+      align-items: center;      /* 縦方向中央 */
+    }
+
+    .header {
+      width: 100%;
+      background-color: #000; /* 黒背景 */
+      color: #fff;            /* 白文字 */
+      padding: 12px 20px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: left;       /* 左寄せ（キャプチャ風） */
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .center-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .message-box {
+      width: 520px;
+      padding: 20px 24px;
+      background-color: #4aa6d9; /* 濃い水色エリア */
+      color: #000;
+      border: 2px solid #000;
+    }
+
+    .message-title {
+      margin-bottom: 12px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .message-line {
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .radio-group {
+      margin-left: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .btn-next {
+      width: 140px;
+      height: 36px;
+      background-color: #000;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-exit {
+      width: 140px;
+      height: 36px;
+      background-color: #d00000;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+  <script src="{{url_for('url_static', path='commonFuncs.js')}}"></script>
+  <script src="{{url_for('url_static', path='app_init_funcs.js')}}"></script>
+</head>
+<body>
+  <div class="header">🏃AI_for_runner</div>
+  <div class="center-wrapper">
+
+    <div class="message-title">🏃こんにちは、あなたのランニングを支援します</div>
+
+    <div class="message-box">
+      <div class="message-line">AIに過去のランニング記録を入力しますか？（y/n）:</div>
+
+      <div class="radio-group">
+        <label>
+          <input type="radio" name="run_option" value="y" checked>
+          y：ランニング記録の入力に進む
+        </label>
+
+        {% if not dbsetup_flg %}
+        <label>
+          <input type="radio" name="run_option" value="n">
+          n：AIが本日の走行距離（km）を算出します
+        </label>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button type="button" class="btn-next" onclick="goto_nextPage()">次へ進む</button>
+      <button type="button" class="btn-exit" onclick="exitApp()">アプリ終了</button>
+    </div>
+  </div>
+</body>
+</html>
