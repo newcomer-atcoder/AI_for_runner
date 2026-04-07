@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 #自作モジュール
-from my_modules.database.setup import DBSetUp
-from my_modules.database.models import RunDist
-from my_modules.data.entry import EntryRunData, ValueCheck
 from my_modules.ai.facade import AIFacade
+from my_modules.data.facade import DBFacade
 
 #APIライブラリ
 from fastapi import FastAPI, Request, HTTPException
@@ -47,8 +45,9 @@ def favicon():
     return Response(status_code=204)  # No Content
 
 #アプリ実行直後にapp_init画面を表示
-dbsetup = DBSetUp()
-dbsetup_flg = dbsetup.setUp_Done()
+dbFacade = DBFacade()
+dbsetup_flg = dbFacade.setUp_Done()
+EntryValueCheck = dbFacade.ValueCheck
 def loadApp():
     time.sleep(3)
     webbrowser.open('http://127.0.0.1:8000')
@@ -70,7 +69,8 @@ def goto_nextPage(request : Request, path_id, result=None):
     
     if path_id == inference_path and result == None:
         #機械学習
-        aiFacade.load_TrainingData(dbsetup.engine, RunDist)
+        (engine, RunDist) = dbFacade.getDBAccessInfo()
+        aiFacade.load_TrainingData(engine, RunDist)
         aiFacade.trainingDone()
 
     return_dict = {'request' : request, 'result' : '' if result is None else result}
@@ -90,10 +90,9 @@ def not_found_handler(request: Request, exc):
 
 #app_entry画面の入力を受ける
 #422例外はjsで吸収
-myRunData = EntryRunData(dbsetup_flg)
 @app.post(f'/{entry_path}/')
-def entry_runData(runData : ValueCheck):
-    myRunData.add_runData(runData)
+def entry_runData(runData : EntryValueCheck):
+    dbFacade.add_runData(runData)
     return {
             'entry_result' : f'登録成功 : {runData.yyyy}/{runData.mm}/{runData.dd}, {runData.distance}km, {runData.condition}%, {runData.runningDist}km'
     }
@@ -103,7 +102,7 @@ def entry_runData(runData : ValueCheck):
 @app.post(exit_entry_path)
 def exitEntry():
     #DB更新
-    myRunData.insert_into_db(dbsetup.engine, RunDist)
+    dbFacade.insert_into_db()
     return {'entry_exit_result' : 'DB更新&機械学習完了'}
 
 #app_inference画面の入力を受ける
