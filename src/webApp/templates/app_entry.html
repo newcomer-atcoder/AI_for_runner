@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>app entry page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Meiryo", sans-serif;
+      background-color: #cfefff; /* 薄い水色 */
+      height: 100vh;
+      display: flex;
+      justify-content: center; /* 横中央 */
+      align-items: center;     /* 縦中央 */
+    }
+
+    /* ヘッダー */
+    .header {
+      width: 100%;
+      background-color: #000;
+      color: #fff;
+      padding: 12px 20px;
+      font-size: 20px;
+      font-weight: bold;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* 中央のフォーム全体 */
+    .center-wrapper {
+      margin-top: 40px; /* ヘッダーと重ならないように調整 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* 濃い水色の入力エリア */
+    .form-box {
+      width: 520px;
+      padding: 20px 24px;
+      background-color: #4aa6d9;
+      border: 2px solid #000;
+    }
+
+    .title {
+      font-size: 32px;
+      margin-bottom: 16px;
+      font-weight: bold;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .form-row label {
+      width: 160px;
+    }
+
+    .form-row input {
+      width: 40px;
+      padding: 4px;
+      background-color: #fff; /* 白背景＝テキストボックス */
+      border: 1px solid #000;
+    }
+
+    .unit {
+      margin-left: 6px;
+    }
+
+    /* ボタン */
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      width: 120px;
+      height: 34px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .btn-register {
+      background-color: #000;
+    }
+
+    .btn-finish {
+      background-color: #0066cc;
+    }
+
+    .btn-exit {
+      background-color: #d00000;
+    }
+
+    /* メッセージエリア */
+    .message-box {
+      width: 520px;
+      padding: 16px 20px;
+      background-color: #4aa6d9;
+      border: 2px solid #000;
+      margin-top: 10px;
+    }
+
+    .message-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .message-area input {
+      width: 480px;
+      height: 80px;
+      padding: 4px;
+      background-color: #fff; /* 白背景＝テキストボックス */
+      border: 1px solid #000;
+    }
+  </style>
+  <script src="{{url_for('url_static', path='commonFuncs.js')}}"></script>
+  <script src="{{url_for('url_static', path='app_entry_funcs.js')}}"></script>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <div class="header">🏃AI_for_runner</div>
+
+  <div class="center-wrapper">
+    <div class="title">🏃過去のランニング記録を登録します</div>
+
+    <!-- 入力フォーム -->
+    <div class="form-box">
+      <div class="message-title">◆入力画面</div>
+
+      <div class="form-row">
+        <label>日付 :</label>
+        <input id="yyyy" type="text" placeholder="yyyy">
+        <span class="unit">年</span>
+        <input id="mm" type="text" placeholder="mm" style="margin-left:10px;">
+        <span class="unit">月</span>
+        <input id="dd" type="text" placeholder="dd" style="margin-left:10px;">
+        <span class="unit">日</span>
+      </div>
+
+      <div class="form-row">
+        <label>走行予定の距離 :</label>
+        <input id="distance" type="text">
+        <span class="unit">km</span>
+      </div>
+
+      <div class="form-row">
+        <label>体調 :</label>
+        <input id="condition" type="text">
+        <span class="unit">%</span>
+      </div>
+
+      <div class="form-row">
+        <label>実際に走った距離 :</label>
+        <input id="runningDist" type="text">
+        <span class="unit">km</span>
+      </div>
+
+      <div class="buttons">
+        <button class="btn btn-register" onclick="entry_runData()">登録</button>
+        <button class="btn btn-finish" onclick="exitEntry()">登録終了</button>
+        <button class="btn btn-exit" onclick="exitApp()">アプリ終了</button>
+      </div>
+    </div>
+
+    <!-- 登録メッセージ -->
+    <div class="message-box">
+      <div class="message-title">◆登録メッセージ</div>
+      <div class="message-area">
+        <input type="text" value="{{result}}">
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

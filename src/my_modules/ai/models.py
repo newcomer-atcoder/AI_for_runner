@@ -55,4 +55,5 @@ class DefaultModel:
 
         #「実際に走る距離(km)」の推論、ランナーに「本日のあなたの適正距離(km)」として返却
         distance_condition = torch.tensor([[inputs.distance, inputs.condition]])
-        return self.model(distance_condition)
+        runningDist = float(self.model(distance_condition))
+        return f'{runningDist:.3f}'
