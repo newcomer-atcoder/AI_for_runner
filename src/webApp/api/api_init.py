@@ -28,16 +28,16 @@ def init_app(request : Request):
         {'request' : request, 'dbsetup_flg' : dbFacade.setUp_Done()}
     )
 
-"""
+
 #404 Not Found
-@initRouter.exception_handler(404)
+@app.exception_handler(404)
 def not_found_handler(request: Request, exc):
     return htmlTemp.TemplateResponse(
         notFound_html,
         {'request': request},
         status_code=404
     )
-"""
+
 
 #アプリ終了ボタン
 @initRouter.post(exit_app_path)
