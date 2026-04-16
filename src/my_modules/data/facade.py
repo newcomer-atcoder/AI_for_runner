@@ -39,5 +39,5 @@ class DBFacade:
     
     #self.entry経由で現在DBの登録件数が0件か否か判定
     def isNodata(self):
-        self.entry.isNodata(self.setup.engine, RunDist)
+        return self.entry.isNodata(self.setup.engine, RunDist)
 

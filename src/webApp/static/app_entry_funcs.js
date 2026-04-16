@@ -40,7 +40,7 @@ const entry_runData = async() => {
 const exitEntry = async() => {
 
     //DB(=ランニング記録)の更新はこのタイミングで行う
-    await fetch(
+    const result = await fetch(
         "/updateDB/",
         {
             method : "POST",
@@ -48,5 +48,14 @@ const exitEntry = async() => {
         }
     );
 
-    window.location.href = "/inference/";
+    const items = await result.json();
+    const status = items.entry_exit_result;
+    if(status == 'NoData'){
+        //DBの登録データが0の場合、app_entry画面に戻る
+        window.location.href = "/entry/?result=" + 'ランニング記録を1件以上登録してください';
+    }
+    else{
+        //推論画面(app_inference)に遷移
+        window.location.href = "/inference/";
+    }
 }

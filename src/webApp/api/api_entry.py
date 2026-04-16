@@ -38,4 +38,9 @@ def entry_runData(runData : EntryValueCheck):
 def exitEntry():
     #DB更新
     dbFacade.insert_into_db()
-    return {'entry_exit_result' : 'DB更新&機械学習完了'}
+
+    #更新後のメッセージ
+    entry_status = 'NoData'\
+        if dbFacade.isNodata() else 'EntryDone'
+
+    return {'entry_exit_result' : entry_status}
