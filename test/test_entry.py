@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, select, Integer, Float, Date, CheckConstraint as check
+from sqlalchemy import create_engine, select, Integer, Float, Date, CheckConstraint as check, delete
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from pathlib import Path
 
@@ -82,4 +82,26 @@ def test_insert_into_db(monkeypatch):
             assert result.condition == exp_value.condition
             assert result.runningDist == exp_value.runningDist
 
+def test_isNodata():
+    test_entry = EntryRunData()
+    engine = create_engine(
+        f'sqlite:///{DB_PATH}',
+        echo=True
+    )
+
+    #test1.DBの登録データが1件以上
+    #test_insert_into_db実行後のデータを想定
+    result1 = test_entry.isNodata(engine, MocRunDist)
+    assert not result1 #False想定
+
+    #test2.DBの登録データが0件
+
+    #dbデータを一時的に削除したうえで確認
+    with Session(engine) as session:
+        stmt = delete(MocRunDist)
+        session.execute(stmt)
+        session.commit()
+
+    result2 = test_entry.isNodata(engine, MocRunDist)
+    assert result2 #True想定
     
