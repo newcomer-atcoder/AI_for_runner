@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 import datetime
-from sqlalchemy import Engine
+from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session, DeclarativeBase
 
 #定数(DBに登録する値のチェック用)
@@ -40,3 +40,11 @@ class EntryRunData:
                 inserts += [RunDist(date=nowDate, distance=checkedValues.distance, condition=checkedValues.condition, runningDist=checkedValues.runningDist)]
             session.add_all(inserts)
             session.commit()
+    
+    #データ登録件数の確認
+    #データ0件か否かを判定し、0件であればWEB画面(app_inference)の遷移を禁止する
+    def isNodata(self, engine : Engine, Rundist : DeclarativeBase):
+        with Session(engine) as session:
+            stmt = select(Rundist)
+            result = session.scalars(stmt)
+            return  len(result.all())== 0
