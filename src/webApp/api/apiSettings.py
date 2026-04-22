@@ -36,6 +36,7 @@ inference_path = '/inference/'
 
 exit_app_path = '/exit/'        #アプリ終了処理のリクエスト先
 exit_entry_path = '/updateDB/'  #entryページの入力終了処理のリクエスト先
+save_schedule_path = '/save/'   #AIの推論結果を、次の予定として記録
 
 #DB操作と機械学習、それぞれの窓口クラスオブジェクトを生成しておく
 aiFacade = AIFacade()

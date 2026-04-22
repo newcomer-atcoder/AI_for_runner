@@ -18,6 +18,11 @@ entryRouter = APIRouter()
 @entryRouter.get(entry_path, response_class=HTMLResponse)
 def goto_nextPage(request : Request, result=None):
     return_dict = {'request' : request, 'result' : '' if result is None else result}
+    
+    #以前登録したランニングの予定がある場合、登録画面に自動入力する
+    schedule : dict | None = dbFacade.getSchedule()
+    return_dict['schedule'] = schedule
+
     return htmlTemp.TemplateResponse(
         entry_html,
         return_dict

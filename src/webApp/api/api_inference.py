@@ -1,11 +1,14 @@
 #自作モジュール
-from .apiSettings import inference_html, inference_path
+from .apiSettings import inference_html, inference_path, save_schedule_path
 from .apiSettings import htmlTemp
 from .apiSettings import aiFacade, dbFacade
 
 #APIライブラリ
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
+
+#その他標準モジュール
+import re
 
 ######################################################
 #
@@ -43,3 +46,21 @@ def inference(distance : float, condition : float):
     return {
             'inference_result' : result_info
     }
+
+#AIの推論結果を、次の予定として記録
+inference_result_nums = 3
+isSaved = '保存しました(AIの予測：{}km, 入力値：{}%, {}km)'
+isNotSaved = '推進をやり直してください'
+@inferenceRouter.post(save_schedule_path)
+def saveAsSchedule(saveInfo : str):
+    nums = re.findall(r'([0-9]+\.[0-9]+)', saveInfo)
+    
+    if len(nums) == inference_result_nums:
+        #AIの推論結果と入力値、併せて3点を読み込み次の予定として記録する
+        result = isSaved.format(*nums)
+        dbFacade.saveAsSchedule(*nums)
+    else:
+        #AIの推論結果と入力値、併せて3点を取得できなければ、推論をやり直す
+        result = isNotSaved
+    
+    return {'result' : result}
