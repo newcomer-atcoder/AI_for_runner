@@ -10,6 +10,9 @@ dbname = "app.db"
 BASE_DIR = Path(__file__).parent.parent.parent
 DB_PATH = BASE_DIR/dbname
 
+#セットアップすべきテーブルの数
+TABLES = 2
+
 class DBSetUp:
     def __init__(self):
         #エンジン作成時点で.dbファイルが自動作成されるため、ファイルの存在チェックが不要
@@ -25,9 +28,10 @@ class DBSetUp:
         #DBファイルがない場合はここで自動生成される
         tables = inspect(self.engine).get_table_names()
         
-        if not tables:
+        setupflg = len(tables) < TABLES
+        if setupflg:
             print("初回セットアップ実行")
             Base.metadata.create_all(self.engine)
         else:
             print("設定済みのデータベースがありました")
-        return not tables
+        return setupflg

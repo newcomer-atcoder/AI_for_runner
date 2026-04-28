@@ -17,7 +17,10 @@ class MocUser(MocBase):
 
     name : Mapped[str] = mapped_column(String, primary_key=True)
 
+class MocUser2(MocBase):
+    __tablename__ = "moc_table2"
 
+    name : Mapped[str] = mapped_column(String, primary_key=True)
 
 def test_setUp_Done(monkeypatch):
     #準備
