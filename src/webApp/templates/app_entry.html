@@ -144,29 +144,29 @@
 
       <div class="form-row">
         <label>日付 :</label>
-        <input id="yyyy" type="text" placeholder="yyyy">
+        <input id="yyyy" type="text" placeholder="yyyy" value="{{schedule.yyyy}}">
         <span class="unit">年</span>
-        <input id="mm" type="text" placeholder="mm" style="margin-left:10px;">
+        <input id="mm" type="text" placeholder="mm" style="margin-left:10px;" value="{{schedule.mm}}">
         <span class="unit">月</span>
-        <input id="dd" type="text" placeholder="dd" style="margin-left:10px;">
+        <input id="dd" type="text" placeholder="dd" style="margin-left:10px;" value="{{schedule.dd}}">
         <span class="unit">日</span>
       </div>
 
       <div class="form-row">
         <label>走行予定の距離 :</label>
-        <input id="distance" type="text">
+        <input id="distance" type="text" value="{{schedule.distance}}">
         <span class="unit">km</span>
       </div>
 
       <div class="form-row">
         <label>体調 :</label>
-        <input id="condition" type="text">
+        <input id="condition" type="text" value="{{schedule.condition}}">
         <span class="unit">%</span>
       </div>
 
       <div class="form-row">
         <label>実際に走った距離 :</label>
-        <input id="runningDist" type="text">
+        <input id="runningDist" type="text" value="{{schedule.runningDist}}">
         <span class="unit">km</span>
       </div>
 

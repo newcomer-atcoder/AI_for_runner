@@ -10,10 +10,9 @@ CONDITION_MAX_VALUE = 100 #100%
 class Base(DeclarativeBase):
     pass
 
+#共通のカラム定義
 #「id (primary_key)」「日付」「走行予定の距離(km)」「体調(%)」「実際に走った距離(km)」
-class RunDist(Base):
-    __tablename__ = "runDist"
-
+class Common:
     #カラム定義
 
     #自動採番
@@ -45,3 +44,11 @@ class RunDist(Base):
         check(f"runningDist >= {DIST_MIN_VALUE}"),
         nullable=False
     )
+
+#全てのランニング記録を保持
+class RunDist(Base, Common):
+    __tablename__ = "runDist"
+
+#推論画面(=app_inference)の回答と入力値を、1行保存するためのテーブル
+class RunSchedule(Base, Common):
+    __tablename__ = "runSchedule"
