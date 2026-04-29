@@ -20,8 +20,12 @@ def goto_nextPage(request : Request, result=None):
     return_dict = {'request' : request, 'result' : '' if result is None else result}
     
     #以前登録したランニングの予定がある場合、登録画面に自動入力する
-    schedule : dict | None = dbFacade.getSchedule()
-    return_dict['schedule'] = schedule
+    if result is None:
+        schedule : dict | None = dbFacade.getSchedule()
+        return_dict['schedule'] = schedule
+    else:
+        #一時措置
+        return_dict['schedule'] = None
 
     return htmlTemp.TemplateResponse(
         entry_html,
