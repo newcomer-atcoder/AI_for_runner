@@ -1,10 +1,9 @@
 # ランニングサポートAI
 ## デモ動画
 まずは動作デモにてどのようなアプリなのか確認してください。  
-  
 
-https://github.com/user-attachments/assets/918461d8-0a14-4ee1-85a7-f82304016a61
 
+https://github.com/user-attachments/assets/61353c9e-be06-4216-ab72-166026658457
 
 
 ## ■アプリの紹介
