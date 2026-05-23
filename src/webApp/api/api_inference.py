@@ -49,7 +49,7 @@ def inference(distance : float, condition : float):
 
 #AIの推論結果を、次の予定として記録
 inference_result_nums = 3
-isSaved = '保存しました(AIの予測：{}km, 入力値：{}%, {}km)'
+isSaved = '保存しました(AIの予測：{}km, 入力値：{}km, {}%)'
 isNotSaved = '推進をやり直してください'
 @inferenceRouter.post(save_schedule_path)
 def saveAsSchedule(saveInfo : str):

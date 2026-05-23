@@ -11,47 +11,72 @@
     body {
       margin: 0;
       font-family: "Meiryo", sans-serif;
-      background-color: #cfefff; /* 薄い水色 */
+      background: linear-gradient(180deg, #060c18 0%, #0a1628 40%, #0f2040 70%, #060c18 100%);
       height: 100vh;
       display: flex;
-      justify-content: center; /* 横中央 */
-      align-items: center;     /* 縦中央 */
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      color: #cbd5e1;
     }
+
+    /* ランナーシルエット共通 */
+    .runner-bg {
+      position: absolute;
+      bottom: 0;
+      z-index: 0;
+    }
+    .runner-bg svg {
+      fill: #1e4a7a;
+      display: block;
+    }
+
+    .runner-1 { left:  1%; width: 140px; opacity: 0.45; }
+    .runner-2 { left: 18%; width: 210px; opacity: 0.35; }
+    .runner-3 { left: 42%; width: 170px; opacity: 0.28; }
+    .runner-4 { left: 63%; width: 250px; opacity: 0.40; }
+    .runner-5 { left: 82%; width: 130px; opacity: 0.32; }
 
     /* ヘッダー */
     .header {
       width: 100%;
-      background-color: #000;
-      color: #fff;
+      background-color: #030810;
+      color: #e2e8f0;
       padding: 12px 20px;
       font-size: 20px;
       font-weight: bold;
       position: absolute;
       top: 0;
       left: 0;
+      z-index: 2;
+      border-bottom: 1px solid #1e3a5f;
     }
 
     /* 中央のフォーム全体 */
     .center-wrapper {
-      margin-top: 40px; /* ヘッダーと重ならないように調整 */
+      margin-top: 40px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 16px;
+      position: relative;
+      z-index: 1;
     }
 
-    /* 濃い水色の入力エリア */
+    /* フォーム入力エリア */
     .form-box {
       width: 520px;
       padding: 20px 24px;
-      background-color: #4aa6d9;
-      border: 2px solid #000;
+      background-color: #0d2340;
+      border: 1px solid #1e4a7a;
     }
 
     .title {
       font-size: 32px;
       margin-bottom: 16px;
       font-weight: bold;
+      color: #e2e8f0;
     }
 
     .form-row {
@@ -59,6 +84,7 @@
       align-items: center;
       margin-bottom: 10px;
       font-size: 14px;
+      color: #94a3b8;
     }
 
     .form-row label {
@@ -68,8 +94,9 @@
     .form-row input {
       width: 40px;
       padding: 4px;
-      background-color: #fff; /* 白背景＝テキストボックス */
-      border: 1px solid #000;
+      background-color: #0f2a4a;
+      border: 1px solid #2d5986;
+      color: #e2e8f0;
     }
 
     .unit {
@@ -90,45 +117,100 @@
       border: none;
       cursor: pointer;
       font-size: 14px;
-      color: #fff;
+      color: #e2e8f0;
     }
 
     .btn-inference {
-      background-color: #000;
+      background-color: #1e4a7a;
     }
 
-    .btn-save{
-      background-color: #4bd44b;
+    .btn-save {
+      background-color: #1a5c2a;
     }
 
     .btn-exit {
-      background-color: #d00000;
+      background-color: #7a1e1e;
     }
 
     /* メッセージエリア */
     .message-box {
       width: 520px;
       padding: 16px 20px;
-      background-color: #4aa6d9;
-      border: 2px solid #000;
+      background-color: #0d2340;
+      border: 1px solid #1e4a7a;
       margin-top: 10px;
     }
 
     .message-title {
       font-weight: bold;
       margin-bottom: 8px;
+      color: #94a3b8;
     }
 
     .message-area input {
       width: 480px;
       height: 120px;
       padding: 4px;
-      background-color: #fff; /* 白背景＝テキストボックス */
-      border: 1px solid #000;
+      background-color: #0f2a4a;
+      border: 1px solid #2d5986;
+      color: #cbd5e1;
     }
   </style>
 </head>
 <body>
+
+  <!-- ランナーシルエット（背景） -->
+  <div class="runner-bg runner-1">
+    <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="13" r="11"/>
+      <path d="M63,24 C57,30 53,43 49,62 L58,65 C60,48 66,35 70,28 Z"/>
+      <path d="M65,33 L79,55 L83,52 L69,30 Z"/>
+      <path d="M62,30 L46,19 L44,23 L60,35 Z"/>
+      <path d="M49,62 L39,84 L28,101 L35,104 L47,87 L58,65 Z"/>
+      <path d="M54,63 L58,87 L66,103 L73,100 L66,83 L62,61 Z"/>
+    </svg>
+  </div>
+  <div class="runner-bg runner-2">
+    <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="13" r="11"/>
+      <path d="M63,24 C57,30 53,43 49,62 L58,65 C60,48 66,35 70,28 Z"/>
+      <path d="M65,33 L79,55 L83,52 L69,30 Z"/>
+      <path d="M62,30 L46,19 L44,23 L60,35 Z"/>
+      <path d="M49,62 L39,84 L28,101 L35,104 L47,87 L58,65 Z"/>
+      <path d="M54,63 L58,87 L66,103 L73,100 L66,83 L62,61 Z"/>
+    </svg>
+  </div>
+  <div class="runner-bg runner-3">
+    <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="13" r="11"/>
+      <path d="M63,24 C57,30 53,43 49,62 L58,65 C60,48 66,35 70,28 Z"/>
+      <path d="M65,33 L79,55 L83,52 L69,30 Z"/>
+      <path d="M62,30 L46,19 L44,23 L60,35 Z"/>
+      <path d="M49,62 L39,84 L28,101 L35,104 L47,87 L58,65 Z"/>
+      <path d="M54,63 L58,87 L66,103 L73,100 L66,83 L62,61 Z"/>
+    </svg>
+  </div>
+  <div class="runner-bg runner-4">
+    <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="13" r="11"/>
+      <path d="M63,24 C57,30 53,43 49,62 L58,65 C60,48 66,35 70,28 Z"/>
+      <path d="M65,33 L79,55 L83,52 L69,30 Z"/>
+      <path d="M62,30 L46,19 L44,23 L60,35 Z"/>
+      <path d="M49,62 L39,84 L28,101 L35,104 L47,87 L58,65 Z"/>
+      <path d="M54,63 L58,87 L66,103 L73,100 L66,83 L62,61 Z"/>
+    </svg>
+  </div>
+  <div class="runner-bg runner-5">
+    <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="13" r="11"/>
+      <path d="M63,24 C57,30 53,43 49,62 L58,65 C60,48 66,35 70,28 Z"/>
+      <path d="M65,33 L79,55 L83,52 L69,30 Z"/>
+      <path d="M62,30 L46,19 L44,23 L60,35 Z"/>
+      <path d="M49,62 L39,84 L28,101 L35,104 L47,87 L58,65 Z"/>
+      <path d="M54,63 L58,87 L66,103 L73,100 L66,83 L62,61 Z"/>
+    </svg>
+  </div>
+
   <!-- ヘッダー -->
   <div class="header">🏃AI_for_runner</div>
 
