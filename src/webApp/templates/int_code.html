@@ -1,0 +1,57 @@
+<!-- 画面全体に「id」「日付」「走行予定の距離(km)」「体調(%)」「実際に走った距離(km)」をテーブル表示 -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>走行記録</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <script src="{{url_for('url_static', path='int_code.js')}}"></script>
+</head>
+<body>
+    <h1>走行記録</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>日付</th>
+                <th>走行予定の距離(km)</th>
+                <th>体調(%)</th>
+                <th>実際に走った距離(km)</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                <td>{{ record.id }}</td>
+                <td>{{ record.date }}</td>
+                <td>{{ record.planned_distance }}</td>
+                <td>{{ record.condition }}</td>
+                <td>{{ record.actual_distance }}</td>
+                <td>
+                    <!--ボタンを押すと、該当の記録が削除されるようにする-->
+                    <button type="button" onclick="deleteRecord('{{ record.id }}')">
+                        <span>削除</span>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

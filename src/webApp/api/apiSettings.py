@@ -29,14 +29,17 @@ init_html = 'app_init.html'
 entry_html = 'app_entry.html'
 inference_html = 'app_inference.html'
 notFound_html = 'notFound.html' #404 not foundの際に表示する共通のページ
+int_code_html = 'int_code.html'
 
 init_path = '/'
 entry_path = '/entry/'
 inference_path = '/inference/'
+int_code_path = '/' #main.pyでは実行せず、api_int_code.pyを個別に実行するため
 
 exit_app_path = '/exit/'        #アプリ終了処理のリクエスト先
 exit_entry_path = '/updateDB/'  #entryページの入力終了処理のリクエスト先
 save_schedule_path = '/save/'   #AIの推論結果を、次の予定として記録
+delete_record_path = '/api/delete/' #int_code経由でレコード削除
 
 #DB操作と機械学習、それぞれの窓口クラスオブジェクトを生成しておく
 aiFacade = AIFacade()
