@@ -61,6 +61,16 @@ class EntryRunData(EntryBase):
             result = session.scalars(stmt)
             resultLen = len(result.all())
         return  resultLen == 0
+    
+    #int_code経由でデータ削除
+    def deleteRecord(self, id: int, engine : Engine, Rundist : DeclarativeBase):
+        try:
+            with Session(engine) as session:
+                stmt = delete(Rundist).where(Rundist.id == id)
+                session.execute(stmt)
+                session.commit()
+        except:
+            print('削除に失敗しました')
 
 #次回のランニングの予定を1件管理する
 class SaveRunSchedule(EntryBase):

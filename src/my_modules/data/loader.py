@@ -38,3 +38,12 @@ class DefaultData(Data):
 
     def getTensorDatas(self):
         return self.distance_conditions_Tensor, self.runningDists_Tensor
+    
+#内部コード(int_code.py)用にレコード全件取得
+def getAllDatas(engine : Engine, RunDist : DeclarativeBase) -> list[DeclarativeBase]:
+    allDatas = []
+    with Session(engine) as session:
+        stmt = select(RunDist)
+        allDatas = session.scalars(stmt).all()
+    
+    return allDatas #list[DeclarativeBase]型

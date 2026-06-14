@@ -1,11 +1,13 @@
 #標準ライブラリ
 from pydantic import ValidationError
 import datetime
+from sqlalchemy.orm import DeclarativeBase
 
 #自作モジュール
 from ..database.setup import DBSetUp
 from ..database.models import RunDist, RunSchedule
 from .entry import ValueCheck, EntryRunData, SaveRunSchedule
+from .loader import getAllDatas
 
 #定数(DBエントリーで用いるカラム名)
 yyyy = 'yyyy'
@@ -60,4 +62,12 @@ class DBFacade:
         return_dict['mm'] = return_dict['date'].month
         return_dict['dd'] = return_dict['date'].day
         return return_dict
+    
+    #int_codeでランニング記録を全件取得
+    def getAllDatas(self) -> list[DeclarativeBase]:
+        return getAllDatas(self.setup.engine, RunDist)
+    
+    #int_code経由でデータ削除
+    def deleteRecord(self, id: int):
+        self.entry.deleteRecord(id, self.setup.engine, RunDist)
 
