@@ -18,6 +18,14 @@
         th {
             background-color: #f2f2f2;
         }
+
+        .scroller {
+            border: 0px;
+            margin: 2px;
+            width: 50px;
+            height: 40px;
+            font-size: 30px;
+        }
     </style>
     <script src="{{url_for('url_static', path='int_code.js')}}"></script>
 </head>
@@ -52,6 +60,19 @@
             {% endfor %}
         </tbody>
     </table>
+    <div>
+        <!-- 前後の10件のランニング記録を表示するボタン -->
+         {% if not first_page %}
+         <button type="button" class="scroller" onclick="updPage(false, '{{page}}')">
+            ◀️
+         </button>
+         {% endif %}
+         {% if not last_page %}
+         <button type="button" class="scroller" onclick="updPage(true, '{{page}}')">
+            ▶️
+         </button>
+         {% endif %}
+    </div>
 
 </body>
 </html>

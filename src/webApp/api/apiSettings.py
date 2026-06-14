@@ -40,6 +40,7 @@ exit_app_path = '/exit/'        #アプリ終了処理のリクエスト先
 exit_entry_path = '/updateDB/'  #entryページの入力終了処理のリクエスト先
 save_schedule_path = '/save/'   #AIの推論結果を、次の予定として記録
 delete_record_path = '/api/delete/' #int_code経由でレコード削除
+update_display_page_path = '/api/updPage/' #int_codeで表示する範囲(=10件のレコード)を更新する
 
 #DB操作と機械学習、それぞれの窓口クラスオブジェクトを生成しておく
 aiFacade = AIFacade()
