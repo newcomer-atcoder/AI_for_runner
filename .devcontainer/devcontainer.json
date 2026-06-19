@@ -1,0 +1,40 @@
+{
+  "name": "PythonContainer",
+
+  // 旧 "dockerFile" は非推奨。現行スキーマの build.dockerfile を使用
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  // コンテナ内で使用するVS Code拡張機能のID
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.pylance",
+        "charliermarsh.ruff" // 例: 最近主流の高速フォーマッター/リンター
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+        // "python.linting.enabled" は Python 拡張で廃止された設定のため削除
+        // (リンティングは Ruff 等の専用拡張側で行われる)
+      }
+    }
+  },
+
+  // コンテナ作成後に自動実行するコマンド
+  //  (1) torch 系3点を CPU 版インデックスから先にインストールし、2.5.1(CPU) を確定させる
+  //  (2) その後 requirements.txt を導入。torch は導入済みのため再取得・上書きされない
+  //  ※ GPU(CUDA) を使う場合は下記コメント参照
+  "postCreateCommand": "pip install --user torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu && pip install --user -r requirements.txt",
+
+  // node.js
+  "features": {
+    "ghcr.io/devcontainers/features/node:2.1.0": {
+      "version": "lts"
+    }
+  },
+
+  // 開発ユーザー名
+  "remoteUser": "vscode"
+}
