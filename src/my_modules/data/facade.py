@@ -1,5 +1,4 @@
 #標準ライブラリ
-from pydantic import ValidationError
 import datetime
 from sqlalchemy.orm import DeclarativeBase
 
@@ -70,4 +69,7 @@ class DBFacade:
     #int_code経由でデータ削除
     def deleteRecord(self, id: int):
         self.entry.deleteRecord(id, self.setup.engine, RunDist)
-
+    
+    #int_code経由でデータ更新
+    def updateRecord(self, id: int, row: ValueCheck):
+        self.entry.updateRecord(id, row, self.setup.engine, RunDist)

@@ -1,5 +1,5 @@
-from webApp.api.apiSettings import dbFacade, htmlTemp, app, int_code_html
-from webApp.api.apiSettings import int_code_path, delete_record_path, update_display_page_path
+from webApp.api.apiSettings import dbFacade, htmlTemp, app, int_code_html, ValueCheck
+from webApp.api.apiSettings import int_code_path, delete_record_path, update_display_page_path, receive_update_path
 
 from fastapi import status
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -117,5 +117,33 @@ def deleteMethod(req: Json):
 
     return RedirectResponse(
         url= int_code_path,
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+# レコード更新
+class Row(BaseModel):
+    id: int = Field(ge=1)
+    yyyy: int = Field(ge=1)
+    mm: int = Field(ge=1)
+    dd: int = Field(ge=1)
+    planned_distance: float = Field(ge=1)
+    condition: float = Field(ge=1)
+    actual_distance: float = Field(ge=1)
+
+@app.put(receive_update_path)
+def updateMethod(req: Row):
+    row = ValueCheck(
+        yyyy=req.yyyy,
+        mm=req.mm,
+        dd=req.dd,
+        distance=req.planned_distance,
+        condition=req.condition,
+        runningDist=req.actual_distance
+    )
+
+    dbFacade.updateRecord(req.id, row)
+    
+    return RedirectResponse(
+        int_code_path,
         status_code=status.HTTP_303_SEE_OTHER
     )

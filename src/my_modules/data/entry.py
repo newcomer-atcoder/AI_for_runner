@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 import datetime
-from sqlalchemy import Engine, select, delete
+from sqlalchemy import Engine, select, delete, update
 from sqlalchemy.orm import Session, DeclarativeBase
 from abc import ABC, abstractmethod
 
@@ -69,8 +69,24 @@ class EntryRunData(EntryBase):
                 stmt = delete(Rundist).where(Rundist.id == id)
                 session.execute(stmt)
                 session.commit()
-        except:
+        except Exception:
             print('削除に失敗しました')
+    
+    #int_code経由でデータを更新
+    def updateRecord(self, id: int, row: ValueCheck, engine : Engine, Rundist : DeclarativeBase):
+        try:
+            with Session(engine) as session:
+                stmt = update(Rundist).where(Rundist.id == id).\
+                    values(
+                        date= datetime.date(row.yyyy, row.mm, row.dd),
+                        distance= row.distance,
+                        condition= row.condition,
+                        runningDist= row.runningDist
+                    )
+                session.execute(stmt)
+                session.commit()
+        except Exception:
+            print('更新に失敗しました')
 
 #次回のランニングの予定を1件管理する
 class SaveRunSchedule(EntryBase):
