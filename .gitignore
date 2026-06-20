@@ -30,3 +30,6 @@ testDB/
 
 #その他
 学習用データ/
+_ClaudeCode知識/
+.claude/
+.docs/
