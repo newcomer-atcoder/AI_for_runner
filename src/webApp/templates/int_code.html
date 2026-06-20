@@ -380,6 +380,10 @@
             {% if not last_page %}
             <button type="button" class="btn-page" onclick="updPage(true, '{{page}}')">▶</button>
             {% endif %}
+
+            <!-- ◀▶の右隣に追加ボタン(常時表示) -->
+            <button type="button" class="btn-page" style="width:auto; padding:0 16px;"
+                    onclick="addRecord()">追加</button>
         </div>
     </div>
 </body>

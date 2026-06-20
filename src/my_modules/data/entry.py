@@ -88,6 +88,23 @@ class EntryRunData(EntryBase):
         except Exception:
             print('更新に失敗しました')
 
+    #int_code経由でデータを1件新規追加(バッファ不使用)
+    def addRecord(self, runData: 'ValueCheck',
+                  engine: Engine, Rundist: DeclarativeBase):
+        try:
+            nowDate = datetime.date(runData.yyyy, runData.mm, runData.dd)
+            with Session(engine) as session:
+                newRecord = Rundist(
+                    date=nowDate,
+                    distance=runData.distance,
+                    condition=runData.condition,
+                    runningDist=runData.runningDist,
+                )
+                session.add(newRecord)
+                session.commit()
+        except Exception:
+            print('追加に失敗しました')
+
 #次回のランニングの予定を1件管理する
 class SaveRunSchedule(EntryBase):
     def add_runData(self, runData : ValueCheck):

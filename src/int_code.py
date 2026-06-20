@@ -1,5 +1,8 @@
 from webApp.api.apiSettings import dbFacade, htmlTemp, app, int_code_html, ValueCheck
-from webApp.api.apiSettings import int_code_path, delete_record_path, update_display_page_path, receive_update_path
+from webApp.api.apiSettings import (
+    int_code_path, delete_record_path, update_display_page_path,
+    receive_update_path, receive_add_path,
+)
 
 from fastapi import status
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -142,8 +145,36 @@ def updateMethod(req: Row):
     )
 
     dbFacade.updateRecord(req.id, row)
-    
+
     return RedirectResponse(
         int_code_path,
         status_code=status.HTTP_303_SEE_OTHER
+    )
+
+# 新規追加で受け取るリクエストボディ(idは無し=自動採番)
+class NewRow(BaseModel):
+    yyyy: int = Field(ge=1)
+    mm: int = Field(ge=1)
+    dd: int = Field(ge=1)
+    planned_distance: float = Field(ge=0)
+    condition: float = Field(ge=0)
+    actual_distance: float = Field(ge=0)
+
+@app.post(receive_add_path)
+def addMethod(req: NewRow):
+    # ValueCheck で範囲検証(体調0〜100、距離>=0 など)
+    runData = ValueCheck(
+        yyyy=req.yyyy, mm=req.mm, dd=req.dd,
+        distance=req.planned_distance,
+        condition=req.condition,
+        runningDist=req.actual_distance,
+    )
+
+    # 新設の専用メソッドで1件INSERT
+    dbFacade.addRecord(runData)
+
+    # getMethod(クエリなしの'/')へ
+    return RedirectResponse(
+        int_code_path,
+        status_code=status.HTTP_303_SEE_OTHER,
     )
