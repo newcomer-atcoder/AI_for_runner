@@ -7,6 +7,8 @@ async function deleteRecord(id){
             body: JSON.stringify({id: id})
         }
     );
+
+    window.location.href = '/';
 }
 
 async function updPage(nextFlg, page){
