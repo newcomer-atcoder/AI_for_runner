@@ -194,6 +194,30 @@
             color: #fca5a5;
         }
 
+        .btn-edit {
+            background: transparent;
+            border: 1px solid #3f3f5a;
+            color: #94a3b8;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+            margin-right: 6px;
+        }
+
+        .btn-edit:hover {
+            background: #1e3a5f;
+            border-color: #2563eb;
+            color: #93c5fd;
+        }
+
+        /* 登録モードのとき強調(任意) */
+        .btn-edit.is-editing {
+            border-color: #16a34a;
+            color: #86efac;
+        }
+
         .pagination {
             display: flex;
             align-items: center;
@@ -264,21 +288,83 @@
                 </thead>
                 <tbody>
                     {% for record in records %}
-                    <tr>
-                        <td><span class="id-badge">#{{ record.id }}</span></td>
-                        <td>{{ record.date }}</td>
-                        <td><span class="distance-value">{{ record.planned_distance }}</span><span class="distance-unit">km</span></td>
+                    <tr data-id="{{ record.id }}">
+                        <!-- id -->
                         <td>
-                            <div class="condition-bar">
-                                <div class="bar-bg">
-                                    <div class="bar-fill" style="width: '{{ record.condition }}%'"></div>
-                                </div>
-                                <span style="font-size:13px; min-width:36px">{{ record.condition }}%</span>
-                            </div>
+                            <span class="id-badge">#{{ record.id }}</span>
                         </td>
-                        <td><span class="distance-value">{{ record.actual_distance }}</span><span class="distance-unit">km</span></td>
+
+                        <!-- 日付 -->
                         <td>
-                            <button class="btn-delete" type="button" onclick="deleteRecord('{{ record.id }}')">削除</button>
+                            <span class="cell-view">{{ record.date }}</span>
+                            <input
+                                type="date"
+                                class="cell-edit"
+                                value="{{ record.date }}"
+                                data-field="edit_date"
+                                hidden
+                            />
+                        </td>
+
+                        <!-- 走行予定の距離(km) -->
+                        <td>
+                            <span class="cell-view">
+                                <span class="distance-value">{{ record.planned_distance }}</span><span class="distance-unit">km</span>
+                            </span>
+                            <input
+                                type="number"
+                                class="cell-edit"
+                                value="{{ record.planned_distance }}"
+                                data-field="edit_planned_distance"
+                                placeholder="単位 : km"
+                                hidden
+                            />
+                        </td>
+
+                        <!-- 体調 -->
+                        <td>
+                            <div class="cell-view">
+                                <div class="condition-bar">
+                                    <div class="bar-bg">
+                                        <div class="bar-fill" style="width: '{{ record.condition }}%'"></div>
+                                    </div>
+                                    <span style="font-size:13px; min-width:36px">{{ record.condition }}%</span>
+                                </div>
+                            </div>
+                            <input
+                                type="number"
+                                class="cell-edit"
+                                value="{{ record.condition }}"
+                                data-field="edit_condition"
+                                placeholder="単位 : %"
+                                hidden
+                            />
+                        </td>
+
+                        <!-- 実際に走った距離(km) -->
+                        <td>
+                            <span class="cell-view">
+                                <span class="distance-value">{{ record.actual_distance }}</span><span class="distance-unit">km</span>
+                            </span>
+                            <input
+                                type="number"
+                                class="cell-edit"
+                                value="{{ record.actual_distance }}"
+                                data-field="edit_actual_distance"
+                                placeholder="単位 : km"
+                                hidden
+                            />
+                        </td>
+                        <!-- ボタンエリア -->
+                        <td>
+                            <div class="cell-view">
+                                <button class="btn-edit" type="button" onclick="editRecord(this)">編集</button>
+                                <button class="btn-delete" type="button" onclick="deleteRecord('{{ record.id }}')">削除</button>
+                            </div>
+                            <div class="cell-edit" hidden>
+                                <button class="btn-edit btn-edit is-editing" type="button" onclick="editRecord(this)">登録</button>
+                                <button class="btn-delete" type="button" onclick="editCancel(this)">キャンセル</button>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -294,6 +380,10 @@
             {% if not last_page %}
             <button type="button" class="btn-page" onclick="updPage(true, '{{page}}')">▶</button>
             {% endif %}
+
+            <!-- ◀▶の右隣に追加ボタン(常時表示) -->
+            <button type="button" class="btn-page" style="width:auto; padding:0 16px;"
+                    onclick="addRecord()">追加</button>
         </div>
     </div>
 </body>
