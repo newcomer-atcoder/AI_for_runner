@@ -168,3 +168,95 @@ def test_getSchedule():
 
     result2 = test_schedule.getSchedule(engine, MocRunDist)
     assert result2 is None #データなし
+
+#2026/6/21追加
+#EntryRunData.addRecord / updateRecord / deleteRecord のテスト
+
+#共通ヘルパー
+def _make_engine():
+    return create_engine(f"sqlite:///{DB_PATH}", echo=True)
+
+def _clear(engine):
+    #テーブルを空にする(テスト間の独立性確保)
+    with Session(engine) as session:
+        session.execute(delete(MocRunDist))
+        session.commit()
+
+def _fetch_all(engine):
+    with Session(engine) as session:
+        return session.scalars(select(MocRunDist)).all()
+
+def test_addRecord():
+    engine = _make_engine()
+    _clear(engine)
+
+    entry = EntryRunData()
+
+    #1件目を追加
+    rec1 = ValueCheck(yyyy=2026, mm=6, dd=21, distance=8.0, condition=65.0, runningDist=7.5)
+    entry.addRecord(rec1, engine, MocRunDist)
+
+    rows = _fetch_all(engine)
+    assert len(rows) == 1                      #ちょうど1件
+    assert rows[0].date == datetime.date(2026, 6, 21)
+    assert rows[0].distance == 8.0
+    assert rows[0].condition == 65.0
+    assert rows[0].runningDist == 7.5
+
+    #2件目を追加 → バッファを使わないので"重複せず"2件になる
+    rec2 = ValueCheck(yyyy=2026, mm=6, dd=22, distance=10.0, condition=80.0, runningDist=9.0)
+    entry.addRecord(rec2, engine, MocRunDist)
+
+    rows = _fetch_all(engine)
+    assert len(rows) == 2                      #1件目が重複していない=合計2件
+    dists = sorted(r.distance for r in rows)
+    assert dists == [8.0, 10.0]
+
+def test_updateRecord():
+    engine = _make_engine()
+    _clear(engine)
+
+    entry = EntryRunData()
+
+    #更新対象を1件用意し、自動採番された id を取得
+    before = ValueCheck(yyyy=2026, mm=1, dd=10, distance=5.0, condition=50.0, runningDist=4.0)
+    entry.addRecord(before, engine, MocRunDist)
+    target_id = _fetch_all(engine)[0].id       #idは固定値を仮定せずDBから取得
+
+    #更新を実行
+    after = ValueCheck(yyyy=2026, mm=12, dd=31, distance=20.0, condition=90.0, runningDist=18.0)
+    entry.updateRecord(target_id, after, engine, MocRunDist)
+
+    rows = _fetch_all(engine)
+    assert len(rows) == 1                       #件数は増減しない
+    updated = rows[0]
+    assert updated.id == target_id              #同じ行が更新された
+    assert updated.date == datetime.date(2026, 12, 31)
+    assert updated.distance == 20.0
+    assert updated.condition == 90.0
+    assert updated.runningDist == 18.0
+
+def test_deleteRecord():
+    engine = _make_engine()
+    _clear(engine)
+
+    entry = EntryRunData()
+
+    #2件用意する
+    entry.addRecord(ValueCheck(yyyy=2026, mm=2, dd=1, distance=3.0, condition=40.0, runningDist=3.0),
+                    engine, MocRunDist)
+    entry.addRecord(ValueCheck(yyyy=2026, mm=3, dd=1, distance=6.0, condition=60.0, runningDist=6.0),
+                    engine, MocRunDist)
+
+    rows = _fetch_all(engine)
+    assert len(rows) == 2
+    delete_id = rows[0].id                      #消す対象
+    keep_id   = rows[1].id                      #残る対象
+
+    #削除を実行
+    entry.deleteRecord(delete_id, engine, MocRunDist)
+
+    rows_after = _fetch_all(engine)
+    remaining_ids = [r.id for r in rows_after]
+    assert delete_id not in remaining_ids       #対象は消えた
+    assert remaining_ids == [keep_id]           #もう一方は残っている
