@@ -132,6 +132,10 @@
       background-color: #7a1e1e;
     }
 
+    .btn-int-code {
+      background-color: #1a5c2a;
+    }
+
     /* メッセージエリア */
     .message-box {
       width: 520px;
@@ -263,6 +267,11 @@
       <div class="message-title">◆登録メッセージ</div>
       <div class="message-area">
         <input type="text" value="{{result}}" readonly>
+      </div>
+      <div class="buttons">
+        <button class="btn btn-int-code" onclick="window.location.href='/intcode/'">
+          管理画面に移動
+        </button>
       </div>
     </div>
 
