@@ -4,6 +4,7 @@
 from webApp.api.api_entry import entryRouter
 from webApp.api.api_inference import inferenceRouter
 from webApp.api.api_init import initRouter
+from webApp.api.api_int_code import intCodeRouter
 from webApp.api.apiSettings import app
 
 #その他標準モジュール
@@ -16,6 +17,7 @@ import webbrowser
 app.include_router(initRouter)
 app.include_router(entryRouter)
 app.include_router(inferenceRouter)
+app.include_router(intCodeRouter)
 
 #アプリ実行直後にapp_init画面を表示
 def loadApp():

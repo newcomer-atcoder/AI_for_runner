@@ -1,16 +1,25 @@
-from webApp.api.apiSettings import dbFacade, htmlTemp, app, int_code_html, ValueCheck
+from webApp.api.apiSettings import dbFacade, htmlTemp, int_code_html, ValueCheck
 from webApp.api.apiSettings import (
     int_code_path, delete_record_path, update_display_page_path,
     receive_update_path, receive_add_path,
 )
 
-from fastapi import status
+from fastapi import status, APIRouter
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.requests import Request
 from pydantic import BaseModel, Field
 
+intCodeRouter = APIRouter()
+
+######################################################
+#
+#以下に開発者向け管理画面(int_code)機能を定義しておく
+#main.py から intCodeRouter を include して /intcode/ で表示する
+#
+######################################################
+
 #テーブル一覧
-unit = 10
+unit = 10 #1ページで表示する件数
 class TableDisplay:
     _instance = None
 
@@ -39,7 +48,6 @@ class TableDisplay:
     
     def getTable(self):
         #10件取得
-        unit = 10
         Len = len(self.tables)
         index = self.display_index
         return self.tables[index * unit : min(Len, (index + 1) * unit)]
@@ -51,7 +59,7 @@ class TableDisplay:
 
 #テーブル一覧を取得し表示する
 #ランニング記録を10件表示
-@app.get(int_code_path, response_class=HTMLResponse)
+@intCodeRouter.get(int_code_path, response_class=HTMLResponse)
 def getMethod(request: Request, page: int = None):
     #初期表示
     if page is None:
@@ -99,7 +107,7 @@ def getMethod(request: Request, page: int = None):
     )
 
 #テーブル一覧で表示する範囲を更新
-@app.get(update_display_page_path)
+@intCodeRouter.get(update_display_page_path)
 def updPage(page: str):
     tables = TableDisplay()
     tables.setIndex(int(page))
@@ -113,7 +121,7 @@ def updPage(page: str):
 class Json(BaseModel):
     id : int = Field(ge=1)
 
-@app.delete(delete_record_path)
+@intCodeRouter.delete(delete_record_path)
 def deleteMethod(req: Json):
     id = req.id
     dbFacade.deleteRecord(id)
@@ -133,7 +141,7 @@ class Row(BaseModel):
     condition: float = Field(ge=1)
     actual_distance: float = Field(ge=1)
 
-@app.put(receive_update_path)
+@intCodeRouter.put(receive_update_path)
 def updateMethod(req: Row):
     row = ValueCheck(
         yyyy=req.yyyy,
@@ -160,7 +168,7 @@ class NewRow(BaseModel):
     condition: float = Field(ge=0)
     actual_distance: float = Field(ge=0)
 
-@app.post(receive_add_path)
+@intCodeRouter.post(receive_add_path)
 def addMethod(req: NewRow):
     # ValueCheck で範囲検証(体調0〜100、距離>=0 など)
     runData = ValueCheck(

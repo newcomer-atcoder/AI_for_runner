@@ -8,7 +8,7 @@ async function deleteRecord(id){
         }
     );
 
-    window.location.href = '/';
+    window.location.href = '/intcode/';
 }
 
 async function updPage(nextFlg, page){
@@ -21,7 +21,7 @@ async function updPage(nextFlg, page){
         }
     );
 
-    window.location.href = '/?page=' + nextPage;
+    window.location.href = '/intcode/?page=' + nextPage;
 }
 
 function editRecord(btn){
@@ -76,7 +76,7 @@ async function submitUpdate(row) {
         }
     );
 
-    window.location.href = '/'
+    window.location.href = '/intcode/'
 }
 
 let isAdding = false;   // 追加行の二重生成を防ぐフラグ
@@ -88,7 +88,7 @@ function addRecord(){
     const page = Number(params.get('page') || 0);
     if(page !== 0){
         // 0ページ目に遷移してから追加させる(状態を持ち越さないシンプル方式)
-        window.location.href = '/';
+        window.location.href = '/intcode/';
         return;
     }
     if(isAdding) return;          // 既に1行追加済みなら何もしない
@@ -134,5 +134,10 @@ async function submitAdd(btn){
         }),
     });
 
-    window.location.href = '/';   // getMethod(先頭ページ)へ
+    window.location.href = '/intcode/';   // getMethod(先頭ページ)へ
+}
+
+// 「戻る」: 登録画面(/entry/)へ戻る
+function goEntry(){
+    window.location.href = '/entry/';
 }

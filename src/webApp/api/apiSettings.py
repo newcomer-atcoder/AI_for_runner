@@ -34,7 +34,7 @@ int_code_html = 'int_code.html'
 init_path = '/'
 entry_path = '/entry/'
 inference_path = '/inference/'
-int_code_path = '/' #main.pyでは実行せず、api_int_code.pyを個別に実行するため
+int_code_path = '/intcode/'
 
 exit_app_path = '/exit/'        #アプリ終了処理のリクエスト先
 exit_entry_path = '/updateDB/'  #entryページの入力終了処理のリクエスト先
