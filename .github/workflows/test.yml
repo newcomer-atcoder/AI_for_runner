@@ -1,0 +1,33 @@
+name: CI
+
+# PR をトリガーに実行（main 等への push でも回したい場合は push: を追加）
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10 # 万が一の無限ループによる枠消費を防ぐ
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"   # devcontainer 実績(cpython-311)に合わせる
+          cache: pip               # pip ダウンロードをキャッシュして高速化
+
+      - name: Install PyTorch (CPU wheel)
+        # requirements.txt には torch が無い(コメントアウト)ため、CPU 版を先に入れる
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        # プロジェクトルートから実行（src/ 配下だと from src.my_modules.* が失敗する）
+        run: pytest -v

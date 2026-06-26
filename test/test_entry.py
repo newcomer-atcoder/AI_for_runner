@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine, select, Integer, Float, Date, CheckConstraint as check, delete
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
-from pathlib import Path
 
 from src.my_modules.data.entry import EntryRunData, ValueCheck, SaveRunSchedule
 
@@ -11,7 +10,6 @@ import datetime
 DIST_MIN_VALUE = 0
 CONDITION_MIN_VALUE = 0
 CONDITION_MAX_VALUE = 100
-DB_PATH = Path(__file__).parent/"testDB"/"test6.db"
 
 class Base(DeclarativeBase):
     pass
@@ -52,14 +50,13 @@ class MocRunDist(Base):
     )
 
 #ここからテストコード
-def test_insert_into_db(monkeypatch):
+def test_insert_into_db(tmp_db_path):
     engine = create_engine(
-        url=f"sqlite:///{DB_PATH}",
+        url=f"sqlite:///{tmp_db_path}",
         echo=True
     )
-    if not DB_PATH.exists():
-        Base.metadata.create_all(engine)
-    
+    Base.metadata.create_all(engine) # 毎回まっさらなので無条件に作成
+
     testInsert = EntryRunData()
 
     #dbデータを削除したうえで確認
@@ -78,7 +75,7 @@ def test_insert_into_db(monkeypatch):
     #期待値通りの値を登録できるか
     testInsert.checkedValueList = exp_values
     testInsert.insert_into_db(engine, MocRunDist)
-    
+
     with Session(engine) as session:
         stmt = select(MocRunDist)
         results = session.scalars(statement=stmt)
@@ -88,39 +85,32 @@ def test_insert_into_db(monkeypatch):
             assert result.condition == exp_value.condition
             assert result.runningDist == exp_value.runningDist
 
-def test_isNodata():
-    test_entry = EntryRunData()
-    engine = create_engine(
-        f'sqlite:///{DB_PATH}',
-        echo=True
-    )
+def test_isNodata(tmp_db_path):
+    engine = create_engine(f"sqlite:///{tmp_db_path}", echo=True)
+    Base.metadata.create_all(engine) # 毎回まっさらなので無条件に作成
+    entry = EntryRunData()
 
-    #test1.DBの登録データが1件以上
-    #test_insert_into_db実行後のデータを想定
-    result1 = test_entry.isNodata(engine, MocRunDist)
-    assert not result1 #False想定
+    #test1: データを1件入れてから判定 → False 期待（前テストの残存データに依存しない）
+    entry.checkedValueList = [ValueCheck(yyyy=2026, mm=3, dd=18,
+                                         distance=5.0, condition=70.0, runningDist=6.0)]
+    entry.insert_into_db(engine, MocRunDist)
+    assert not entry.isNodata(engine, MocRunDist) #False想定
 
-    #test2.DBの登録データが0件
-
-    #dbデータを一時的に削除したうえで確認
+    #test2: 全削除してから判定 → True 期待
     with Session(engine) as session:
-        stmt = delete(MocRunDist)
-        session.execute(stmt)
+        session.execute(delete(MocRunDist))
         session.commit()
-
-    result2 = test_entry.isNodata(engine, MocRunDist)
-    assert result2 #True想定
+    assert entry.isNodata(engine, MocRunDist) #True想定
 
 #2026/4/29追加
 #SaveRunScheduleクラスのテスト
-def test_insert_into_db_save(monkeypatch):
+def test_insert_into_db_save(tmp_db_path):
     engine = create_engine(
-        url=f"sqlite:///{DB_PATH}",
+        url=f"sqlite:///{tmp_db_path}",
         echo=True
     )
-    if not DB_PATH.exists():
-        Base.metadata.create_all(engine)
-    
+    Base.metadata.create_all(engine) # 毎回まっさらなので無条件に作成
+
     testInsert = SaveRunSchedule()
 
     #期待値
@@ -132,7 +122,7 @@ def test_insert_into_db_save(monkeypatch):
     #期待値通りの値を登録できるか
     testInsert.checkedValueList = exp_values
     testInsert.insert_into_db(engine, MocRunDist)
-    
+
     with Session(engine) as session:
         stmt = select(MocRunDist)
         results = session.scalars(statement=stmt)
@@ -142,30 +132,23 @@ def test_insert_into_db_save(monkeypatch):
             assert result.condition == exp_value.condition
             assert result.runningDist == exp_value.runningDist
 
-def test_getSchedule():
+def test_getSchedule(tmp_db_path):
+    engine = create_engine(f"sqlite:///{tmp_db_path}", echo=True)
+    Base.metadata.create_all(engine) # 毎回まっさらなので無条件に作成
     test_schedule = SaveRunSchedule()
-    engine = create_engine(
-        f'sqlite:///{DB_PATH}',
-        echo=True
-    )
 
-    #test1.DBの登録データが1件以上
-    #test_insert_into_db_save実行後のデータを想定
-    exp_values = [
+    #test1: 1件登録してから取得 → dict 期待（前テストの残存データに依存しない）
+    test_schedule.checkedValueList = [
         ValueCheck(yyyy=2026, mm=4, dd=29, distance=1.0, condition=70.0, runningDist=1.0)
     ]
-    #期待値
+    test_schedule.insert_into_db(engine, MocRunDist)
     result1 = test_schedule.getSchedule(engine, MocRunDist)
     assert type(result1) == dict #何かしらの辞書を取得
 
-    #test2.DBの登録データが0件
-
-    #dbデータを一時的に削除したうえで確認
+    #test2: 全削除してから取得 → None 期待
     with Session(engine) as session:
-        stmt = delete(MocRunDist)
-        session.execute(stmt)
+        session.execute(delete(MocRunDist))
         session.commit()
-
     result2 = test_schedule.getSchedule(engine, MocRunDist)
     assert result2 is None #データなし
 
@@ -173,8 +156,8 @@ def test_getSchedule():
 #EntryRunData.addRecord / updateRecord / deleteRecord のテスト
 
 #共通ヘルパー
-def _make_engine():
-    return create_engine(f"sqlite:///{DB_PATH}", echo=True)
+def _make_engine(tmp_db_path):
+    return create_engine(f"sqlite:///{tmp_db_path}", echo=True)
 
 def _clear(engine):
     #テーブルを空にする(テスト間の独立性確保)
@@ -186,8 +169,9 @@ def _fetch_all(engine):
     with Session(engine) as session:
         return session.scalars(select(MocRunDist)).all()
 
-def test_addRecord():
-    engine = _make_engine()
+def test_addRecord(tmp_db_path):
+    engine = _make_engine(tmp_db_path)
+    Base.metadata.create_all(engine)
     _clear(engine)
 
     entry = EntryRunData()
@@ -212,8 +196,9 @@ def test_addRecord():
     dists = sorted(r.distance for r in rows)
     assert dists == [8.0, 10.0]
 
-def test_updateRecord():
-    engine = _make_engine()
+def test_updateRecord(tmp_db_path):
+    engine = _make_engine(tmp_db_path)
+    Base.metadata.create_all(engine)
     _clear(engine)
 
     entry = EntryRunData()
@@ -236,8 +221,9 @@ def test_updateRecord():
     assert updated.condition == 90.0
     assert updated.runningDist == 18.0
 
-def test_deleteRecord():
-    engine = _make_engine()
+def test_deleteRecord(tmp_db_path):
+    engine = _make_engine(tmp_db_path)
+    Base.metadata.create_all(engine)
     _clear(engine)
 
     entry = EntryRunData()

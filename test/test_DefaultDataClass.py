@@ -4,14 +4,12 @@ from src.my_modules.data.loader import DefaultData
 from sqlalchemy import create_engine, select, Integer, Float, Date, CheckConstraint as check
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 import datetime
-from pathlib import Path
 import torch
 
 #テスト環境作成
 DIST_MIN_VALUE = 0 #0km
 CONDITION_MIN_VALUE = 0 #0%
 CONDITION_MAX_VALUE = 100 #100%
-DB_PATH = Path(__file__).parent/"testDB"/"test5.db"
 TEST_DATA_DISTANCE_CONDITIONS = [
     [5.0, 50.0],
     [11.0, 60.0]
@@ -73,14 +71,13 @@ def setUpTestEnv(engine):
 
 #ここからテストコード
 #1.load_TrainingDataメソッド
-def test_load_TrainingData(monkeypatch):
+def test_load_TrainingData(tmp_db_path):
     engine = create_engine(
-        url=f"sqlite:///{DB_PATH}",
+        url=f"sqlite:///{tmp_db_path}",
         echo=True
     )
-    if not DB_PATH.exists():
-        setUpTestEnv(engine)
-    
+    setUpTestEnv(engine) # 毎回まっさらなので無条件実行
+
     #期待値
     exp_distance_conditions = torch.tensor(TEST_DATA_DISTANCE_CONDITIONS, dtype=torch.float32)
     exp_runningDists = torch.tensor(TEST_DATA_RUNNINGDISTS, dtype=torch.float32)
@@ -88,13 +85,11 @@ def test_load_TrainingData(monkeypatch):
     #結果
     testData = DefaultData()
     testData.load_TrainingData(engine, MocRunDist)
-    
+
     for exps, results in zip(exp_distance_conditions, testData.distance_conditions_Tensor):
         for i, exp in enumerate(exps):
             assert exp == results[i]
-    
+
     for exps, results in zip(exp_runningDists, testData.runningDists_Tensor):
         for i, exp in enumerate(exps):
             assert exp == results[i]
-
-    
