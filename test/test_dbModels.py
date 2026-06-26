@@ -1,22 +1,18 @@
 from src.my_modules.database.models import Base, RunDist
 from sqlalchemy import create_engine, inspect, delete, select
 from sqlalchemy.orm import Session
-from pathlib import Path
 
 import datetime
 from sqlalchemy.exc import DataError, IntegrityError, StatementError
 
-def test_dbColumns(monkeypatch):
+def test_dbColumns(tmp_db_path):
     #まずはrundistテーブルを生成しておく
-    DB_DIR = Path(__file__).parent/"testDB"/"test4.db"
     engine = create_engine(
-        url=f"sqlite:///{DB_DIR}",
+        url=f"sqlite:///{tmp_db_path}",
         echo=True
     )
 
-    tables = inspect(engine).get_table_names()
-    if not tables:
-        Base.metadata.create_all(engine)
+    Base.metadata.create_all(engine) # 毎回まっさらなので無条件に作成
     
     #DBへの登録値：「日付」「走行予定の距離(km)」「体調(%)」「実走距離(%)」
     #「id (primary_key)」は自動採番のため考慮しない
