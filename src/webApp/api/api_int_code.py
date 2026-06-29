@@ -129,8 +129,10 @@ def getMethod(request: Request, page: int = None):
     first_page: bool = nowPage == 0
     if LEN == 0:
         last_page = True
+        last_page_num = 0
     else:
-        last_page: bool = nowPage == LEN // unit + (0 if LEN % unit > 0 else -1)
+        last_page_num = LEN // unit + (0 if LEN % unit > 0 else -1)
+        last_page: bool = nowPage == last_page_num
         
     return htmlTemp.TemplateResponse(
         int_code_html,
@@ -140,7 +142,8 @@ def getMethod(request: Request, page: int = None):
             'headerItems': headerItems,
             'page' : tables.getIndex(),
             'first_page' : first_page,
-            'last_page' : last_page
+            'last_page' : last_page,
+            'last_page_num' : last_page_num
         }
     )
 

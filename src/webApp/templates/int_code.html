@@ -374,11 +374,13 @@
 
         <div class="pagination">
             {% if not first_page %}
+            <button type="button" class="btn-page" onclick="updPage(false, '1')">◀◀</button>
             <button type="button" class="btn-page" onclick="updPage(false, '{{page}}')">◀</button>
             {% endif %}
             <span style="font-size:14px; color:#475569;">ページ {{ page }}</span>
             {% if not last_page %}
             <button type="button" class="btn-page" onclick="updPage(true, '{{page}}')">▶</button>
+            <button type="button" class="btn-page" onclick="updPage(true, '{{last_page_num - 1}}')">▶▶</button>
             {% endif %}
 
             <!-- ◀▶の右隣に追加ボタン(常時表示) -->
