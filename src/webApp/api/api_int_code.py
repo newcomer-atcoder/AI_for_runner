@@ -39,6 +39,13 @@ class TableDisplay:
             tables += records[i : min(len(records), i + unit)]
         self.tables = tables
         self.display_index = 0 #表示する情報の範囲を、tablesのindexで表す
+        self.headerItems = {}
+
+    def setHeaderItems(self, headerItems: dict):
+        self.headerItems = headerItems
+
+    def getHeaderItems(self) -> dict:
+        return getattr(self, 'headerItems', {})
     
     def setIndex(self, index):
         self.display_index = index
@@ -88,6 +95,7 @@ def getMethod(request: Request, page: int = None):
         
         #一覧を保存
         tables = TableDisplay(records)
+        tables.setHeaderItems(headerItems)
 
         # 当月分の記録の平均値算出と整形
         run_cnt = headerItems['run_cnt']
@@ -113,11 +121,16 @@ def getMethod(request: Request, page: int = None):
                 url=int_code_path,
                 status_code=status.HTTP_303_SEE_OTHER
             )
+
+        headerItems = tables.getHeaderItems()
     
     nowPage = tables.getIndex()
     LEN = tables.getTableLength()
     first_page: bool = nowPage == 0
-    last_page: bool = nowPage == LEN // unit + (0 if LEN % unit > 0 else -1)
+    if LEN == 0:
+        last_page = True
+    else:
+        last_page: bool = nowPage == LEN // unit + (0 if LEN % unit > 0 else -1)
         
     return htmlTemp.TemplateResponse(
         int_code_html,
