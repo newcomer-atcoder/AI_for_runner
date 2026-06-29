@@ -8,6 +8,7 @@ from fastapi import status, APIRouter
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.requests import Request
 from pydantic import BaseModel, Field
+import datetime
 
 intCodeRouter = APIRouter()
 
@@ -64,8 +65,12 @@ def getMethod(request: Request, page: int = None):
     #初期表示
     if page is None:
         db_infos = dbFacade.getAllDatas()
-        records = []
+        records = [] # 全ランニング記録
+        no_record = 0
+        nowYear, nowMonth = datetime.datetime.now().year, datetime.datetime.now().month
+        headerItems = {'yyyymm': f'{nowYear}/{nowMonth}', 'run_cnt': no_record, 'condition_ave': no_record, 'actual_distance_sum': no_record} #ヘッダ項目(年月, 総記録数, 平均体調, 合計走行距離)
         for db_info in db_infos:
+            # 全レコードの情報を取得
             record = {
                 'id': db_info.id,
                 'date': db_info.date,
@@ -74,9 +79,28 @@ def getMethod(request: Request, page: int = None):
                 'actual_distance' : db_info.runningDist
             }
             records += [record]
+
+            # 当月分の記録を取得
+            if db_info.date.year == nowYear and db_info.date.month == nowMonth:
+                headerItems['run_cnt'] += 1
+                headerItems['condition_ave'] += db_info.condition
+                headerItems['actual_distance_sum'] += db_info.runningDist
         
         #一覧を保存
         tables = TableDisplay(records)
+
+        # 当月分の記録の平均値算出と整形
+        run_cnt = headerItems['run_cnt']
+        if run_cnt != no_record:
+            condition_ave = headerItems['condition_ave'] / run_cnt
+            headerItems['run_cnt'] = f'{headerItems["run_cnt"]}回'
+            headerItems['condition_ave'] = f'{round(condition_ave, 1)}%'
+            headerItems['actual_distance_sum'] = f'{headerItems["actual_distance_sum"]}km'
+        else:
+            no_record_str = '-'
+            headerItems['run_cnt'] = no_record_str
+            headerItems['condition_ave'] = no_record_str
+            headerItems['actual_distance_sum'] = no_record_str
     
     #ページスクロールした場合
     else:
@@ -100,6 +124,7 @@ def getMethod(request: Request, page: int = None):
         {
             'request' : request,
             'records' : tables.getTable(),
+            'headerItems': headerItems,
             'page' : tables.getIndex(),
             'first_page' : first_page,
             'last_page' : last_page

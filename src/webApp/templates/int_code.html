@@ -261,16 +261,16 @@
 
         <div class="stats-row">
             <div class="stat-card">
-                <div class="stat-label">総記録数</div>
-                <div class="stat-value">—</div>
+                <div class="stat-label">総記録数({{ headerItems.yyyymm }})</div>
+                <div class="stat-value">{{ headerItems.run_cnt }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">平均体調</div>
-                <div class="stat-value">—</div>
+                <div class="stat-label">平均体調({{ headerItems.yyyymm }})</div>
+                <div class="stat-value">{{ headerItems.condition_ave }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">合計走行距離</div>
-                <div class="stat-value">—</div>
+                <div class="stat-label">合計走行距離({{ headerItems.yyyymm }})</div>
+                <div class="stat-value">{{ headerItems.actual_distance_sum }}</div>
             </div>
         </div>
 
