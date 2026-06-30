@@ -8,6 +8,7 @@ from fastapi import status, APIRouter
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.requests import Request
 from pydantic import BaseModel, Field
+import datetime
 
 intCodeRouter = APIRouter()
 
@@ -38,6 +39,13 @@ class TableDisplay:
             tables += records[i : min(len(records), i + unit)]
         self.tables = tables
         self.display_index = 0 #表示する情報の範囲を、tablesのindexで表す
+        self.headerItems = {}
+
+    def setHeaderItems(self, headerItems: dict):
+        self.headerItems = headerItems
+
+    def getHeaderItems(self) -> dict:
+        return getattr(self, 'headerItems', {})
     
     def setIndex(self, index):
         self.display_index = index
@@ -64,8 +72,12 @@ def getMethod(request: Request, page: int = None):
     #初期表示
     if page is None:
         db_infos = dbFacade.getAllDatas()
-        records = []
+        records = [] # 全ランニング記録
+        no_record = 0
+        nowYear, nowMonth = datetime.datetime.now().year, datetime.datetime.now().month
+        headerItems = {'yyyymm': f'{nowYear}/{nowMonth}', 'run_cnt': no_record, 'condition_ave': no_record, 'actual_distance_sum': no_record} #ヘッダ項目(年月, 総記録数, 平均体調, 合計走行距離)
         for db_info in db_infos:
+            # 全レコードの情報を取得
             record = {
                 'id': db_info.id,
                 'date': db_info.date,
@@ -74,9 +86,29 @@ def getMethod(request: Request, page: int = None):
                 'actual_distance' : db_info.runningDist
             }
             records += [record]
+
+            # 当月分の記録を取得
+            if db_info.date.year == nowYear and db_info.date.month == nowMonth:
+                headerItems['run_cnt'] += 1
+                headerItems['condition_ave'] += db_info.condition
+                headerItems['actual_distance_sum'] += db_info.runningDist
         
         #一覧を保存
         tables = TableDisplay(records)
+        tables.setHeaderItems(headerItems)
+
+        # 当月分の記録の平均値算出と整形
+        run_cnt = headerItems['run_cnt']
+        if run_cnt != no_record:
+            condition_ave = headerItems['condition_ave'] / run_cnt
+            headerItems['run_cnt'] = f'{headerItems["run_cnt"]}回'
+            headerItems['condition_ave'] = f'{round(condition_ave, 1)}%'
+            headerItems['actual_distance_sum'] = f'{headerItems["actual_distance_sum"]}km'
+        else:
+            no_record_str = '-'
+            headerItems['run_cnt'] = no_record_str
+            headerItems['condition_ave'] = no_record_str
+            headerItems['actual_distance_sum'] = no_record_str
     
     #ページスクロールした場合
     else:
@@ -89,20 +121,29 @@ def getMethod(request: Request, page: int = None):
                 url=int_code_path,
                 status_code=status.HTTP_303_SEE_OTHER
             )
+
+        headerItems = tables.getHeaderItems()
     
     nowPage = tables.getIndex()
     LEN = tables.getTableLength()
     first_page: bool = nowPage == 0
-    last_page: bool = nowPage == LEN // unit + (0 if LEN % unit > 0 else -1)
+    if LEN == 0:
+        last_page = True
+        last_page_num = 0
+    else:
+        last_page_num = LEN // unit + (0 if LEN % unit > 0 else -1)
+        last_page: bool = nowPage == last_page_num
         
     return htmlTemp.TemplateResponse(
         int_code_html,
         {
             'request' : request,
             'records' : tables.getTable(),
+            'headerItems': headerItems,
             'page' : tables.getIndex(),
             'first_page' : first_page,
-            'last_page' : last_page
+            'last_page' : last_page,
+            'last_page_num' : last_page_num
         }
     )
 
