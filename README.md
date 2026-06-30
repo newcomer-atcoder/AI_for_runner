@@ -6,7 +6,8 @@
 まずは動作デモにてどのようなアプリなのか確認してください。
 
 
-https://github.com/user-attachments/assets/61353c9e-be06-4216-ab72-166026658457
+https://github.com/user-attachments/assets/0ca3a2fc-27fa-4bbd-8330-cd702c99ff46
+
 
 
 ## ■アプリ概要
