@@ -19,13 +19,9 @@ entryRouter = APIRouter()
 def goto_nextPage(request : Request, result=None):
     return_dict = {'request' : request, 'result' : '' if result is None else result}
     
-    #以前登録したランニングの予定がある場合、登録画面に自動入力する
-    if result is None:
-        schedule : dict | None = dbFacade.getSchedule()
-        return_dict['schedule'] = schedule
-    else:
-        #一時措置
-        return_dict['schedule'] = None
+    schedule : dict | None = dbFacade.getSchedule()
+    return_dict['schedule'] = schedule
+    return_dict['fromSchedule'] = 1 if (schedule and 'distance' in schedule) else 0 # runScheduleテーブル由来のデータを取得したかのフラグ
 
     return htmlTemp.TemplateResponse(
         entry_html,
@@ -36,8 +32,13 @@ def goto_nextPage(request : Request, result=None):
 #422例外はjsで吸収あと、goto_nextPage関数に"/entry/?result=登録失敗"として飛ばす
 EntryValueCheck = dbFacade.ValueCheck
 @entryRouter.post(entry_path)
-def entry_runData(runData : EntryValueCheck):
+def entry_runData(runData : EntryValueCheck, clearSchedule : str = '0'):
     dbFacade.add_runData(runData)
+
+    #runScheduleテーブルのデータを登録済みであれば、テーブルを空にする
+    if clearSchedule == '1':
+        dbFacade.deleteSchedule()
+
     return {
             'entry_result' : f'登録成功 : {runData.yyyy}/{runData.mm}/{runData.dd}, {runData.distance}km, {runData.condition}%, {runData.runningDist}km'
     }

@@ -16,8 +16,11 @@ const entry_runData = async() => {
         "runningDist" : runningDist
     };
 
+    //↓の値が1であればrunScheduleのデータを登録したとみなし、データを削除する
+    const clearSchedule = document.getElementById("fromSchedule").value;
+
     const res = await fetch(
-        "/entry/",
+        "/entry/?clearSchedule=" + clearSchedule,
         {
             method : "POST",
             headers : {"Content-Type" : "application/json"},
@@ -30,9 +33,13 @@ const entry_runData = async() => {
         window.location.href = "/entry/?result=登録失敗";
     }
     //正常入力
-    else{
+    else if(res.ok){
         const result = await res.json();
         window.location.href = "/entry/?result=" + result.entry_result;
+    }
+    //その他のエラー(500等)：JSONでないボディをparseせず、メッセージ欄に理由を表示する
+    else{
+        window.location.href = "/entry/?result=登録失敗（サーバエラー。記録が保存されていない可能性があります）";
     }
 }
 

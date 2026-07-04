@@ -246,3 +246,28 @@ def test_deleteRecord(tmp_db_path):
     remaining_ids = [r.id for r in rows_after]
     assert delete_id not in remaining_ids       #対象は消えた
     assert remaining_ids == [keep_id]           #もう一方は残っている
+
+# 2026/07/04追加
+def test_deleteSchedule(tmp_db_path):
+    engine = _make_engine(tmp_db_path)
+    Base.metadata.create_all(engine)
+    _clear(engine)
+
+    test_schedule = SaveRunSchedule()
+
+    #1件用意する
+    test_schedule.checkedValueList = [
+        ValueCheck(yyyy=2026, mm=4, dd=29, distance=1.0, condition=70.0, runningDist=1.0)
+    ]
+    test_schedule.insert_into_db(engine, MocRunDist)
+    with Session(engine) as session:
+        results = session.scalars(select(MocRunDist))
+        assert len(results.all()) == 1
+    
+
+    #削除実行
+    test_schedule.deleteSchedule(engine, MocRunDist)
+    with Session(engine) as session:
+        results = session.scalars(select(MocRunDist))
+        assert len(results.all()) == 0
+    
