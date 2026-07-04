@@ -16,8 +16,11 @@ const entry_runData = async() => {
         "runningDist" : runningDist
     };
 
+    //現在の画面にクエリパラメータが無ければ「クエリなし状態からの登録」→ runSchedule を削除する
+    const clearSchedule = (window.location.search === "");
+
     const res = await fetch(
-        "/entry/",
+        "/entry/?clearSchedule=" + clearSchedule,
         {
             method : "POST",
             headers : {"Content-Type" : "application/json"},

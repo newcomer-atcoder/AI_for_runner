@@ -125,6 +125,13 @@ class SaveRunSchedule(EntryBase):
             session.add(insert_one)
             session.commit()
     
+    #runSchedule テーブルを全削除する（＝レコード0件にする）
+    def deleteSchedule(self, engine : Engine, RunSchedule : DeclarativeBase):
+        with Session(engine) as session:
+            stmt = delete(RunSchedule)
+            session.execute(stmt)
+            session.commit()
+
     def getSchedule(self, engine : Engine, RunSchedule : DeclarativeBase)\
         -> dict|None:
         with Session(engine) as session:

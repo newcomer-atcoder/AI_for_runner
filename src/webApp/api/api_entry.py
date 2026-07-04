@@ -1,3 +1,6 @@
+#標準ライブラリ
+import datetime
+
 #自作モジュール
 from .apiSettings import entry_html, entry_path, exit_entry_path
 from .apiSettings import htmlTemp
@@ -21,11 +24,17 @@ def goto_nextPage(request : Request, result=None):
     
     #以前登録したランニングの予定がある場合、登録画面に自動入力する
     if result is None:
+        #クエリパラメータなし：これまで通り runSchedule の予定を自動入力
         schedule : dict | None = dbFacade.getSchedule()
         return_dict['schedule'] = schedule
     else:
-        #一時措置
-        return_dict['schedule'] = None
+        #クエリパラメータあり：今日の年月日のみを自動入力（距離・体調・実走距離は空欄）
+        today = datetime.date.today()
+        return_dict['schedule'] = {
+            'yyyy' : today.year,
+            'mm' : today.month,
+            'dd' : today.day,
+        }
 
     return htmlTemp.TemplateResponse(
         entry_html,
@@ -36,8 +45,13 @@ def goto_nextPage(request : Request, result=None):
 #422例外はjsで吸収あと、goto_nextPage関数に"/entry/?result=登録失敗"として飛ばす
 EntryValueCheck = dbFacade.ValueCheck
 @entryRouter.post(entry_path)
-def entry_runData(runData : EntryValueCheck):
+def entry_runData(runData : EntryValueCheck, clearSchedule : bool = False):
     dbFacade.add_runData(runData)
+
+    #クエリパラメータなしの状態からの登録時は、runSchedule テーブルを空にする
+    if clearSchedule:
+        dbFacade.deleteSchedule()
+
     return {
             'entry_result' : f'登録成功 : {runData.yyyy}/{runData.mm}/{runData.dd}, {runData.distance}km, {runData.condition}%, {runData.runningDist}km'
     }

@@ -54,9 +54,18 @@ class DBFacade:
         self.schedule.add_runData(runData)
         self.schedule.insert_into_db(self.setup.engine, RunSchedule)
     
+    #登録画面でクエリなし登録が行われた際、次回予定(runSchedule)を削除する
+    def deleteSchedule(self):
+        self.schedule.deleteSchedule(self.setup.engine, RunSchedule)
+
     #登録画面を呼び出す際、過去に記録したランニング予定を取得する
     def getSchedule(self):
         return_dict = self.schedule.getSchedule(self.setup.engine, RunSchedule)
+
+        #runSchedule が 0 件の場合は None を返す（テンプレートは空欄描画）
+        if return_dict is None:
+            return None
+
         return_dict['yyyy'] = return_dict['date'].year
         return_dict['mm'] = return_dict['date'].month
         return_dict['dd'] = return_dict['date'].day
