@@ -64,11 +64,15 @@ class DBFacade:
 
         #runSchedule が 0 件の場合は None を返す（テンプレートは空欄描画）
         if return_dict is None:
-            return None
-
-        return_dict['yyyy'] = return_dict['date'].year
-        return_dict['mm'] = return_dict['date'].month
-        return_dict['dd'] = return_dict['date'].day
+            return_dict = {}
+            today = datetime.date.today()
+            return_dict['yyyy'] = today.year
+            return_dict['mm'] = today.month
+            return_dict['dd'] = today.day
+        else:
+            return_dict['yyyy'] = return_dict['date'].year
+            return_dict['mm'] = return_dict['date'].month
+            return_dict['dd'] = return_dict['date'].day
         return return_dict
     
     #int_codeでランニング記録を全件取得
