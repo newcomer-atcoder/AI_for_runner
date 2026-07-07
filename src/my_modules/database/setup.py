@@ -1,13 +1,19 @@
 from pathlib import Path
 from sqlalchemy import create_engine, inspect
 from .models import Base
+import sys
 
 #定数
 NO_DB_OR_TABLES = False
 
 #DBの絶対パス指定
 dbname = "app.db"
-BASE_DIR = Path(__file__).parent.parent.parent
+if getattr(sys, 'frozen', False):
+    #exe化(PyInstaller)時: exeファイルと同じフォルダにapp.dbを作る
+    BASE_DIR = Path(sys.executable).parent
+else:
+    #開発時: 従来どおり src/app.db
+    BASE_DIR = Path(__file__).parent.parent.parent
 DB_PATH = BASE_DIR/dbname
 
 #セットアップすべきテーブルの数
