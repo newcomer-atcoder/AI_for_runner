@@ -44,6 +44,10 @@ class EntryRunData(EntryBase):
     def add_runData(self, runData : ValueCheck):
         self.checkedValueList += [runData]
     
+    #シングルトンに一時保存したデータをリフレッシュ
+    def refresh_rundata(self):
+        self.checkedValueList = []
+    
     def insert_into_db(self, engine : Engine, RunDist : DeclarativeBase):
         with Session(engine) as session:
             inserts = []
