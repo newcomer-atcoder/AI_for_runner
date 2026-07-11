@@ -34,3 +34,8 @@ _ClaudeCode知識/
 .claude/
 .docs/
 study/
+
+#exeアプリ関連
+runningAI.spec
+build/
+dist/

@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 
 #その他標準モジュール
 from pathlib import Path
+import sys
 
 ######################################################
 #
@@ -18,7 +19,11 @@ from pathlib import Path
 
 #APIサーバ準備
 app = FastAPI()
-app_dir = Path(__file__).parent.parent
+if getattr(sys, 'frozen', False):
+    #exe化時: PyInstallerの展開先(_MEIPASS)にバンドルされたwebApp/を参照
+    app_dir = Path(sys._MEIPASS)/'webApp'
+else:
+    app_dir = Path(__file__).parent.parent
 
 #テンプレート&静的ファイルのパスを指定
 htmlTemp = Jinja2Templates(directory=app_dir/'templates')
