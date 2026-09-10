@@ -141,3 +141,42 @@ async function submitAdd(btn){
 function goEntry(){
     window.location.href = '/entry/';
 }
+
+// 月次レポートの表示
+document.addEventListener('DOMContentLoaded', () => {
+    // 0. 各種DOM要素の取得
+    const parent_area = document.querySelector('.month-menu-parent-area');
+    const month_view = document.querySelector('.month-view');
+    const month_menu_area = document.querySelector('.month-menu-area');
+
+    // 1. 「📄Monthly Report」にポインターを置くとき、話すときの動作
+    month_view.addEventListener('pointerover', () => {
+        month_menu_area.hidden = false;
+    });
+
+    parent_area.addEventListener('pointerleave', () => {
+        month_menu_area.hidden = true;
+    });
+
+    // 2. menu-itemがクリックされたとき
+    month_menu_area.querySelectorAll('.menu-item').forEach((menu) => {
+        menu.addEventListener('click', async() => {
+            const month = menu.dataset.month;
+            
+            const res = await fetch(
+                `/api/intcode/report/${month}`,
+                {
+                    'method': 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({month: month}),
+                }
+            );
+
+            if (!res.ok) {
+                alert(`月間レポートの取得に失敗 (HTTP ${res.status})`);
+            }
+
+            window.location.href = '/intcode/';
+        });
+    });
+});

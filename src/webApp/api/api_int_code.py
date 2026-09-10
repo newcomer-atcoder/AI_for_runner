@@ -29,7 +29,7 @@ class TableDisplay:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, records: list[dict] = None):
+    def __init__(self, records: list[dict] | None = None):
         if records is not None:
             self.setInitTables(records)
 
@@ -68,14 +68,37 @@ class TableDisplay:
 #テーブル一覧を取得し表示する
 #ランニング記録を10件表示
 @intCodeRouter.get(int_code_path, response_class=HTMLResponse)
-def getMethod(request: Request, page: int = None):
+def getMethod(request: Request, page: int | None = None, month: str | None = None):
+    tables = TableDisplay() # ここに10件単位で🏃記録を保存
+    isMonthlyReport = month is not None and month in tables.getHeaderItems()
+
     #初期表示
     if page is None:
         db_infos = dbFacade.getAllDatas()
         records = [] # 全ランニング記録
         no_record = 0
+
         nowYear, nowMonth = datetime.datetime.now().year, datetime.datetime.now().month
-        headerItems = {'yyyymm': f'{nowYear}/{nowMonth}', 'run_cnt': no_record, 'condition_ave': no_record, 'actual_distance_sum': no_record} #ヘッダ項目(年月, 総記録数, 平均体調, 合計走行距離)
+        
+        if isMonthlyReport:
+            yyyy, mm = map(str, tables.getHeaderItems().get(month).split('/'))
+            isSelected = True
+        else:
+            yyyy, mm = nowYear, nowMonth
+            isSelected = False
+
+        #ヘッダ項目(年月, 総記録数, 平均体調, 合計走行距離) + 月次レポートの選択肢
+        headerItems = {
+            'yyyymm': f'{yyyy}/{mm}',
+            'this_month': f'{nowYear}/{nowMonth}',
+            'last_month': f'{nowYear}/{nowMonth - 1}' if nowMonth > 1 else f'{nowYear - 1}/12',
+            'last_two_month': f'{nowYear}/{nowMonth - 2}' if nowMonth > 2 else f'{nowYear - 2}/12',
+            'isSelect': isSelected,
+            'run_cnt': no_record,
+            'condition_ave': no_record,
+            'actual_distance_sum': no_record
+        }
+
         for db_info in db_infos:
             # 全レコードの情報を取得
             record = {
@@ -85,17 +108,18 @@ def getMethod(request: Request, page: int = None):
                 'condition': db_info.condition,
                 'actual_distance' : db_info.runningDist
             }
-            records += [record]
+
+            if isMonthlyReport:
+                records += [record]
 
             # 当月分の記録を取得
-            if db_info.date.year == nowYear and db_info.date.month == nowMonth:
+            if db_info.date.year == yyyy and db_info.date.month == mm:
                 headerItems['run_cnt'] += 1
                 headerItems['condition_ave'] += db_info.condition
                 headerItems['actual_distance_sum'] += db_info.runningDist
         
         #一覧を保存
-        tables = TableDisplay(records)
-        tables.setHeaderItems(headerItems)
+        tables.setInitTables(records)
 
         # 当月分の記録の平均値算出と整形
         run_cnt = headerItems['run_cnt']
@@ -109,6 +133,7 @@ def getMethod(request: Request, page: int = None):
             headerItems['run_cnt'] = no_record_str
             headerItems['condition_ave'] = no_record_str
             headerItems['actual_distance_sum'] = no_record_str
+        tables.setHeaderItems(headerItems)
     
     #ページスクロールした場合
     else:

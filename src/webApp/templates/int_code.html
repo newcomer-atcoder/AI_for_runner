@@ -58,6 +58,36 @@
             margin-top: 4px;
         }
 
+        /* 月間レポートの選択肢表示 */
+        .month-menu-parent-area {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+
+        .month-view {
+            margin-bottom: 2px; border: 1px solid; border-radius: 4px;
+        }
+
+        .month-menu-area {
+            display: block; position: absolute;
+        }
+
+        .month-menu-area[hidden] {
+            display: none !important ;
+        }
+
+        .menu-list {
+            list-style: none; background-color: white; width: 160px;
+        }
+
+        .menu-item {
+            border: 1px solid; text-align: center; cursor: pointer;
+        }
+
+        /* ここからランニング記録 */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -256,6 +286,28 @@
             <div>
                 <h1>走行記録</h1>
                 <div class="subtitle">Running Log Dashboard</div>
+            </div>
+        </div>
+
+        <!-- ここで選択した月のレポートを表示できる -->
+        <div class="month-menu-parent-area">
+            <span class="month-view">
+                📄Monthly Report {% if headerItems.isSelect %}<span style="color: #00ff00;">(選択中)</span>{% endif %}
+            </span>
+            <div class="month-menu-area" hidden>
+                <!-- 仮入力 -->
+                <ul class="menu-list">
+                    <li class="menu-item" data-month="no_item">(未選択)</li>
+                    <li class="menu-item" data-month="last_two_month">
+                        report ({{ headerItems.last_two_month }})
+                    </li>
+                    <li class="menu-item" data-month="last_month">
+                        report ({{ headerItems.last_month }})
+                    </li>
+                    <li class="menu-item" data-month="">
+                        report ({{ headerItems.this_month }})
+                    </li>
+                </ul>
             </div>
         </div>
 
