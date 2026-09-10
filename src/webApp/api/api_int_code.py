@@ -71,6 +71,7 @@ class TableDisplay:
 def getMethod(request: Request, page: int | None = None, month: str | None = None):
     tables = TableDisplay() # ここに10件単位で🏃記録を保存
     isMonthlyReport = month is not None and month in tables.getHeaderItems()
+    print(f'デバッグ: {month} / {isMonthlyReport}')
 
     #初期表示
     if page is None:
@@ -81,11 +82,12 @@ def getMethod(request: Request, page: int | None = None, month: str | None = Non
         nowYear, nowMonth = datetime.datetime.now().year, datetime.datetime.now().month
         
         if isMonthlyReport:
-            yyyy, mm = map(str, tables.getHeaderItems().get(month).split('/'))
-            isSelected = True
+            yyyy, mm = map(int, tables.getHeaderItems().get(month).split('/'))
+            isSelect = True
         else:
             yyyy, mm = nowYear, nowMonth
-            isSelected = False
+            isSelect = False
+        print(f'デバッグ: {yyyy}/{mm}')
 
         #ヘッダ項目(年月, 総記録数, 平均体調, 合計走行距離) + 月次レポートの選択肢
         headerItems = {
@@ -93,7 +95,7 @@ def getMethod(request: Request, page: int | None = None, month: str | None = Non
             'this_month': f'{nowYear}/{nowMonth}',
             'last_month': f'{nowYear}/{nowMonth - 1}' if nowMonth > 1 else f'{nowYear - 1}/12',
             'last_two_month': f'{nowYear}/{nowMonth - 2}' if nowMonth > 2 else f'{nowYear - 2}/12',
-            'isSelect': isSelected,
+            'isSelect': isSelect,
             'run_cnt': no_record,
             'condition_ave': no_record,
             'actual_distance_sum': no_record
@@ -109,7 +111,10 @@ def getMethod(request: Request, page: int | None = None, month: str | None = Non
                 'actual_distance' : db_info.runningDist
             }
 
-            if isMonthlyReport:
+            if not (
+                    isMonthlyReport and
+                    not(db_info.date.year == yyyy and db_info.date.month == mm)
+                ):
                 records += [record]
 
             # 当月分の記録を取得

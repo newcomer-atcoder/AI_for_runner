@@ -162,21 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     month_menu_area.querySelectorAll('.menu-item').forEach((menu) => {
         menu.addEventListener('click', async() => {
             const month = menu.dataset.month;
-            
-            const res = await fetch(
-                `/api/intcode/report/${month}`,
-                {
-                    'method': 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({month: month}),
-                }
-            );
-
-            if (!res.ok) {
-                alert(`月間レポートの取得に失敗 (HTTP ${res.status})`);
-            }
-
-            window.location.href = '/intcode/';
+            window.location.href = `/intcode/?month=${month}`;
         });
     });
 });
