@@ -276,6 +276,10 @@
             border-color: #6366f1;
             box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
         }
+
+        .btn-page[hidden] {
+            display: none !important;
+        }
     </style>
     <script src="{{url_for('url_static', path='int_code.js')}}"></script>
 </head>
@@ -292,37 +296,39 @@
         <!-- ここで選択した月のレポートを表示できる -->
         <div class="month-menu-parent-area">
             <span class="month-view">
-                📄Monthly Report {% if headerItems.isSelect %}<span style="color: #00ff00;">(選択中)</span>{% endif %}
+                📄Monthly Report
+                <span class="month-selected" style="color: #00ff00;" hidden>(選択中)</span>
             </span>
             <div class="month-menu-area" hidden>
-                <!-- 仮入力 -->
                 <ul class="menu-list">
                     <li class="menu-item" data-month="no_item">(未選択)</li>
-                    <li class="menu-item" data-month="last_two_month">
-                        report ({{ headerItems.last_two_month }})
+                    {% for key in ['last_two_month', 'last_month', 'this_month'] %}
+                    {% set m = monthItems[key] %}
+                    <li class="menu-item"
+                        data-month="{{ key }}"
+                        data-ym="{{ m.ym }}"
+                        data-run-cnt="{{ m.run_cnt }}"
+                        data-condition-ave="{{ m.condition_ave }}"
+                        data-distance-sum="{{ m.actual_distance_sum }}">
+                        report ({{ m.ym }})
                     </li>
-                    <li class="menu-item" data-month="last_month">
-                        report ({{ headerItems.last_month }})
-                    </li>
-                    <li class="menu-item" data-month="this_month">
-                        report ({{ headerItems.this_month }})
-                    </li>
+                    {% endfor %}
                 </ul>
             </div>
         </div>
 
         <div class="stats-row">
             <div class="stat-card">
-                <div class="stat-label">総記録数({{ headerItems.yyyymm }})</div>
-                <div class="stat-value">{{ headerItems.run_cnt }}</div>
+                <div class="stat-label">総記録数(<span data-stat="ym">{{ monthItems.this_month.ym }}</span>)</div>
+                <div class="stat-value" data-stat="run_cnt">{{ monthItems.this_month.run_cnt }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">平均体調({{ headerItems.yyyymm }})</div>
-                <div class="stat-value">{{ headerItems.condition_ave }}</div>
+                <div class="stat-label">平均体調(<span data-stat="ym">{{ monthItems.this_month.ym }}</span>)</div>
+                <div class="stat-value" data-stat="condition_ave">{{ monthItems.this_month.condition_ave }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">合計走行距離({{ headerItems.yyyymm }})</div>
-                <div class="stat-value">{{ headerItems.actual_distance_sum }}</div>
+                <div class="stat-label">合計走行距離(<span data-stat="ym">{{ monthItems.this_month.ym }}</span>)</div>
+                <div class="stat-value" data-stat="distance_sum">{{ monthItems.this_month.actual_distance_sum }}</div>
             </div>
         </div>
 
@@ -340,7 +346,7 @@
                 </thead>
                 <tbody>
                     {% for record in records %}
-                    <tr data-id="{{ record.id }}">
+                    <tr data-id="{{ record.id }}" data-ym="{{ record.ym }}" hidden>
                         <!-- id -->
                         <td>
                             <span class="id-badge">#{{ record.id }}</span>
@@ -378,7 +384,7 @@
                             <div class="cell-view">
                                 <div class="condition-bar">
                                     <div class="bar-bg">
-                                        <div class="bar-fill" style="width: '{{ record.condition }}%'"></div>
+                                        <div class="bar-fill" style="width: {{ record.condition }}%"></div>
                                     </div>
                                     <span style="font-size:13px; min-width:36px">{{ record.condition }}%</span>
                                 </div>
@@ -410,12 +416,12 @@
                         <!-- ボタンエリア -->
                         <td>
                             <div class="cell-view">
-                                <button class="btn-edit" type="button" onclick="editRecord(this)">編集</button>
-                                <button class="btn-delete" type="button" onclick="deleteRecord('{{ record.id }}')">削除</button>
+                                <button class="btn-edit" type="button" data-action="edit">編集</button>
+                                <button class="btn-delete" type="button" data-action="delete">削除</button>
                             </div>
                             <div class="cell-edit" hidden>
-                                <button class="btn-edit btn-edit is-editing" type="button" onclick="editRecord(this)">登録</button>
-                                <button class="btn-delete" type="button" onclick="editCancel(this)">キャンセル</button>
+                                <button class="btn-edit is-editing" type="button" data-action="edit">登録</button>
+                                <button class="btn-delete" type="button" data-action="edit-cancel">キャンセル</button>
                             </div>
                         </td>
                     </tr>
@@ -425,25 +431,21 @@
         </div>
 
         <div class="pagination">
-            {% if not first_page %}
-            <button type="button" class="btn-page" onclick="updPage(false, '1')">◀◀</button>
-            <button type="button" class="btn-page" onclick="updPage(false, '{{page}}')">◀</button>
-            {% endif %}
-            <span style="font-size:14px; color:#475569;">ページ {{ page }}</span>
-            {% if not last_page %}
-            <button type="button" class="btn-page" onclick="updPage(true, '{{page}}')">▶</button>
-            <button type="button" class="btn-page" onclick="updPage(true, '{{last_page_num - 1}}')">▶▶</button>
-            {% endif %}
+            <button type="button" class="btn-page" data-action="first" hidden>◀◀</button>
+            <button type="button" class="btn-page" data-action="prev"  hidden>◀</button>
+            <span style="font-size:14px; color:#475569;">ページ <span data-page-label>0</span></span>
+            <button type="button" class="btn-page" data-action="next" hidden>▶</button>
+            <button type="button" class="btn-page" data-action="last" hidden>▶▶</button>
 
             <!-- ◀▶の右隣に追加ボタン(常時表示) -->
             <button type="button" class="btn-page" style="width:auto; padding:0 16px;"
-                    onclick="addRecord()">
+                    data-action="add">
                 追加
             </button>
 
             <!-- 「追加」の隣に「戻る」ボタン(登録画面へ) -->
             <button type="button" class="btn-page" style="width:auto; padding:0 16px;"
-                    onclick="goEntry()">
+                    data-action="back">
                 戻る
             </button>
         </div>
