@@ -1,6 +1,6 @@
 from webApp.api.apiSettings import dbFacade, htmlTemp, int_code_html, ValueCheck
 from webApp.api.apiSettings import (
-    int_code_path, delete_record_path, update_display_page_path,
+    int_code_path, delete_record_path,
     receive_update_path, receive_add_path,
 )
 
@@ -17,145 +17,70 @@ intCodeRouter = APIRouter()
 #以下に開発者向け管理画面(int_code)機能を定義しておく
 #main.py から intCodeRouter を include して /intcode/ で表示する
 #
+#表示範囲(ページ)と月次レポートの絞り込みは int_code.js が担当する。
+#サーバはレコード全件と、月次レポート選択肢ごとのヘッダ集計値を返すだけ。
+#
 ######################################################
 
-#テーブル一覧
-unit = 10 #1ページで表示する件数
-class TableDisplay:
-    _instance = None
+#基準日から back ヶ月前の(年, 月)を返す(年またぎを正しく処理する)
+def shiftMonth(base: datetime.date, back: int) -> tuple[int, int]:
+    total = base.year * 12 + (base.month - 1) - back
+    return total // 12, total % 12 + 1
 
-    def __new__(cls, *args):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+#指定した年月のヘッダ項目(総記録数, 平均体調, 合計走行距離)を整形して返す
+def buildMonthStats(records: list[dict], yyyy: int, mm: int) -> dict:
+    ym = f'{yyyy}/{mm}'
+    targets = [record for record in records if record['ym'] == ym]
 
-    def __init__(self, records: list[dict] = None):
-        if records is not None:
-            self.setInitTables(records)
+    #該当月に記録が無い場合
+    if not targets:
+        no_record_str = '-'
+        return {
+            'ym': ym,
+            'run_cnt': no_record_str,
+            'condition_ave': no_record_str,
+            'actual_distance_sum': no_record_str,
+        }
 
-    def setInitTables(self, records: list[dict]):
-        tables = [] #ランニング記録を10件づつ記録するための配列
-        for i in range(0, len(records), unit):
-            tables += records[i : min(len(records), i + unit)]
-        self.tables = tables
-        self.display_index = 0 #表示する情報の範囲を、tablesのindexで表す
-        self.headerItems = {}
-
-    def setHeaderItems(self, headerItems: dict):
-        self.headerItems = headerItems
-
-    def getHeaderItems(self) -> dict:
-        return getattr(self, 'headerItems', {})
-    
-    def setIndex(self, index):
-        self.display_index = index
-        print(self.display_index)
-    
-    def getIndex(self):
-        return self.display_index
-    
-    def getTable(self):
-        #10件取得
-        Len = len(self.tables)
-        index = self.display_index
-        return self.tables[index * unit : min(Len, (index + 1) * unit)]
-    
-    def getTableLength(self):
-        if getattr(self, 'tables', None) is None:
-            return 0
-        return len(self.tables)
+    run_cnt = len(targets)
+    condition_ave = sum(target['condition'] for target in targets) / run_cnt
+    return {
+        'ym': ym,
+        'run_cnt': f'{run_cnt}回',
+        'condition_ave': f'{round(condition_ave, 1)}%',
+        'actual_distance_sum': f'{sum(target["actual_distance"] for target in targets)}km',
+    }
 
 #テーブル一覧を取得し表示する
-#ランニング記録を10件表示
+#ランニング記録は全件返し、10件ずつの出し分けは int_code.js が行う
 @intCodeRouter.get(int_code_path, response_class=HTMLResponse)
-def getMethod(request: Request, page: int = None):
-    #初期表示
-    if page is None:
-        db_infos = dbFacade.getAllDatas()
-        records = [] # 全ランニング記録
-        no_record = 0
-        nowYear, nowMonth = datetime.datetime.now().year, datetime.datetime.now().month
-        headerItems = {'yyyymm': f'{nowYear}/{nowMonth}', 'run_cnt': no_record, 'condition_ave': no_record, 'actual_distance_sum': no_record} #ヘッダ項目(年月, 総記録数, 平均体調, 合計走行距離)
-        for db_info in db_infos:
-            # 全レコードの情報を取得
-            record = {
-                'id': db_info.id,
-                'date': db_info.date,
-                'planned_distance': db_info.distance,
-                'condition': db_info.condition,
-                'actual_distance' : db_info.runningDist
-            }
-            records += [record]
+def getMethod(request: Request):
+    records = [
+        {
+            'id': db_info.id,
+            'date': db_info.date,
+            'ym': f'{db_info.date.year}/{db_info.date.month}',
+            'planned_distance': db_info.distance,
+            'condition': db_info.condition,
+            'actual_distance': db_info.runningDist,
+        }
+        for db_info in dbFacade.getAllDatas()
+    ]
 
-            # 当月分の記録を取得
-            if db_info.date.year == nowYear and db_info.date.month == nowMonth:
-                headerItems['run_cnt'] += 1
-                headerItems['condition_ave'] += db_info.condition
-                headerItems['actual_distance_sum'] += db_info.runningDist
-        
-        #一覧を保存
-        tables = TableDisplay(records)
-        tables.setHeaderItems(headerItems)
+    #月次レポートの選択肢(今月・先月・先々月)ごとのヘッダ項目
+    today = datetime.date.today()
+    monthItems = {
+        key: buildMonthStats(records, *shiftMonth(today, back))
+        for key, back in (('this_month', 0), ('last_month', 1), ('last_two_month', 2))
+    }
 
-        # 当月分の記録の平均値算出と整形
-        run_cnt = headerItems['run_cnt']
-        if run_cnt != no_record:
-            condition_ave = headerItems['condition_ave'] / run_cnt
-            headerItems['run_cnt'] = f'{headerItems["run_cnt"]}回'
-            headerItems['condition_ave'] = f'{round(condition_ave, 1)}%'
-            headerItems['actual_distance_sum'] = f'{headerItems["actual_distance_sum"]}km'
-        else:
-            no_record_str = '-'
-            headerItems['run_cnt'] = no_record_str
-            headerItems['condition_ave'] = no_record_str
-            headerItems['actual_distance_sum'] = no_record_str
-    
-    #ページスクロールした場合
-    else:
-        tables = TableDisplay()
-
-        #サーバ起動後に最初から"http://127.0.0.1:8000/?page=3"などをリロードした場合は
-        #クエリパラメータなしのURLに飛ぶように誘導する
-        if tables.getTableLength() == 0:
-            return RedirectResponse(
-                url=int_code_path,
-                status_code=status.HTTP_303_SEE_OTHER
-            )
-
-        headerItems = tables.getHeaderItems()
-    
-    nowPage = tables.getIndex()
-    LEN = tables.getTableLength()
-    first_page: bool = nowPage == 0
-    if LEN == 0:
-        last_page = True
-        last_page_num = 0
-    else:
-        last_page_num = LEN // unit + (0 if LEN % unit > 0 else -1)
-        last_page: bool = nowPage == last_page_num
-        
     return htmlTemp.TemplateResponse(
         int_code_html,
         {
-            'request' : request,
-            'records' : tables.getTable(),
-            'headerItems': headerItems,
-            'page' : tables.getIndex(),
-            'first_page' : first_page,
-            'last_page' : last_page,
-            'last_page_num' : last_page_num
+            'request': request,
+            'records': records,
+            'monthItems': monthItems,
         }
-    )
-
-#テーブル一覧で表示する範囲を更新
-@intCodeRouter.get(update_display_page_path)
-def updPage(page: str):
-    tables = TableDisplay()
-    tables.setIndex(int(page))
-
-    return RedirectResponse(
-        url=int_code_path + f'?page={page}',
-        status_code=status.HTTP_303_SEE_OTHER
     )
 
 #レコード削除
