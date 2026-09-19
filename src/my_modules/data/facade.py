@@ -38,7 +38,7 @@ class DBFacade:
     
     #self.entryに一時保存したデータをリフレッシュ
     def refresh_rundata(self):
-        self.entry.refresh_rundata()
+        return self.entry.refresh_rundata()
 
     #self.entryに保管されたデータを登録
     def insert_into_db(self):
