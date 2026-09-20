@@ -35,15 +35,9 @@ def goto_nextPage(request : Request, result=None):
             aiFacade.trainingDone()
         elif len(add_train_data):
             print('追加でモデルトレーニングを実施')
-            aiFacade.addTrain(
-                [
-                    [t.distance, t.condition] for t in add_train_data
-                ]
-                ,
-                [
-                    [t.runningDist] for t in add_train_data
-                ]
-            )
+            (engine, RunDist) = dbFacade.getDBAccessInfo()
+            aiFacade.load_TrainingData(engine, RunDist, len(add_train_data))
+            aiFacade.addTrain()
 
     return_dict = {'request' : request, 'result' : '' if result is None else result}
     return htmlTemp.TemplateResponse(

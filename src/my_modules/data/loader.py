@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
-
 import torch
 from abc import ABC, abstractmethod
-from sqlalchemy import select, Engine
+from sqlalchemy import select, Engine, desc
 from sqlalchemy.orm import Session, DeclarativeBase
+
+REPLAY_CNT = 20
 
 class Data(ABC):
     @abstractmethod
@@ -17,7 +17,10 @@ class Data(ABC):
 #初期(Default)ver
 #「走行予定の距離(km)」「体調(%)」「実際に走った距離(km)」を管理
 class DefaultData(Data):
-    def load_TrainingData(self, engine : Engine, RunDist : DeclarativeBase):
+    def load_TrainingData(
+        self, engine : Engine, RunDist : DeclarativeBase,
+        add_data_cnt
+    ):
         #フィールド値の初期化
         distance_conditions = []
         runningDists = []
@@ -25,6 +28,11 @@ class DefaultData(Data):
         #DBから全件取得
         with Session(engine) as session:
             stmt = select(RunDist)
+            if add_data_cnt is not None:
+                # モデル更新の場合、追加のデータ + 既存のデータ (直近`REPLAY_CNT`件) をロード
+                limit = add_data_cnt + REPLAY_CNT
+                stmt = stmt.order_by(desc(RunDist.id)).limit(limit)
+
             TrainingDatas = session.scalars(statement=stmt)
         
             #「走行予定の距離(km)」「体調(%)」と「実際に走った距離(km)」をそれぞれの配列にセット
