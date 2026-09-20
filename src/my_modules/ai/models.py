@@ -3,10 +3,20 @@ import torch.nn as nn
 import torch.optim as optim
 from pydantic import BaseModel, Field, ValidationError
 from pathlib import Path
+import sys
 
 # 学習モデルの保存先
-MODEL_PATH = Path(__file__).parent / 'model.pt'
-SETUP_EPOCH = 500
+model_name = 'checkpoint.pt'
+if getattr(sys, 'frozen', False):
+    #exe化(PyInstaller)時: exeファイルと同じフォルダにapp.dbを作る
+    BASE_DIR = Path(sys.executable).parent
+else:
+    #開発時: 従来どおり src/app.db
+    BASE_DIR = Path(__file__).parent.parent.parent
+MODEL_PATH = BASE_DIR/model_name
+
+
+SETUP_EPOCH = 2500
 ADD_TRAIN_EPOCH = 20
 MODEL_STATE = 'model_state_dict'
 OPTIM_STATE = 'optimizer_state_dict'
@@ -40,10 +50,13 @@ class DefaultModel:
         if not MODEL_PATH.exists():
             return False
 
-        checkpoint = torch.load(MODEL_PATH, weights_only= False)
-        self.model.load_state_dict(checkpoint[MODEL_STATE])
-        self.optimizer.load_state_dict(checkpoint[OPTIM_STATE])
-        self.epoch = checkpoint[EPOCH_CNT]
+        try:
+            checkpoint = torch.load(MODEL_PATH, weights_only= True)
+            self.model.load_state_dict(checkpoint[MODEL_STATE])
+            self.optimizer.load_state_dict(checkpoint[OPTIM_STATE])
+            self.epoch = checkpoint[EPOCH_CNT]
+        except Exception:
+            return False # checkpoint.pt のフォーマット不備などに対応
         return True
     
     def trainingDone(
@@ -65,11 +78,12 @@ class DefaultModel:
             self.optimizer.step()       # [勾配(.grad)]*[学習率(lr)]を重みに加算し、更新 ※重み(傾き)増減させて正解に近づける
         
         # 結果を保存
+        self.epoch = epoch if model_setup else self.epoch + epoch
         torch.save(
             {
                 MODEL_STATE: self.model.state_dict(),
                 OPTIM_STATE: self.optimizer.state_dict(),
-                EPOCH_CNT: epoch if SETUP_EPOCH else self.epoch + epoch
+                EPOCH_CNT: self.epoch
             },
             MODEL_PATH
         )
