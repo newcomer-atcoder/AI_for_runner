@@ -1,4 +1,4 @@
-from webApp.api.apiSettings import dbFacade, htmlTemp, int_code_html, ValueCheck
+from webApp.api.apiSettings import dbFacade, htmlTemp, int_code_html, ValueCheck, aiFacade
 from webApp.api.apiSettings import (
     int_code_path, delete_record_path,
     receive_update_path, receive_add_path,
@@ -146,6 +146,14 @@ def addMethod(req: NewRow):
 
     # 新設の専用メソッドで1件INSERT
     dbFacade.addRecord(runData)
+
+    # データ登録と機械学習は同時に行う
+    # 従って管理画面は登録ごとに学習を行う
+    load_success = aiFacade.load_pt_model()
+    if load_success:
+        (engine, RunDist) = dbFacade.getDBAccessInfo()
+        aiFacade.load_TrainingData(engine, RunDist, 1)
+        aiFacade.addTrain()
 
     # getMethod(クエリなしの'/')へ
     return RedirectResponse(
