@@ -36,7 +36,7 @@ def test_dbfacade_all_methods(monkeypatch, tmp_path):
     assert not facade.isNodata()
 
     # refresh_rundata: データをリフレッシュ → データ0件数を確認（EntryRunData.refresh_rundata を経由する）
-    facade.refresh_rundata()
+    assert facade.refresh_rundata()
     assert len(facade.entry.checkedValueList) == 0
 
     # getAllDatas: loader.getAllDatas を経由。登録件数が1件であること

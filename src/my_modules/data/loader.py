@@ -19,7 +19,7 @@ class Data(ABC):
 class DefaultData(Data):
     def load_TrainingData(
         self, engine : Engine, RunDist : DeclarativeBase,
-        add_data_cnt
+        add_data_cnt: int | None = None
     ):
         #フィールド値の初期化
         distance_conditions = []
