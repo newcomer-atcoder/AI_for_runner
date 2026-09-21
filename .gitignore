@@ -28,6 +28,9 @@ venv/
 *.db
 testDB/
 
+# 機械学習モデル
+*.pt
+
 #その他
 学習用データ/
 _ClaudeCode知識/

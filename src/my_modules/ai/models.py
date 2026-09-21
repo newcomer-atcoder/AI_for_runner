@@ -1,9 +1,26 @@
-# -*- coding: utf-8 -*-
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from pydantic import BaseModel, Field, ValidationError
+from pathlib import Path
+import sys
+
+# 学習モデルの保存先
+model_name = 'checkpoint.pt'
+if getattr(sys, 'frozen', False):
+    #exe化(PyInstaller)時: exeファイルと同じフォルダにapp.dbを作る
+    BASE_DIR = Path(sys.executable).parent
+else:
+    #開発時: 従来どおり src/app.db
+    BASE_DIR = Path(__file__).parent.parent.parent
+MODEL_PATH = BASE_DIR/model_name
+
+
+SETUP_EPOCH = 2500
+ADD_TRAIN_EPOCH = 20
+MODEL_STATE = 'model_state_dict'
+OPTIM_STATE = 'optimizer_state_dict'
+EPOCH_CNT = 'epoch'
 
 #推論処理の入力値のチェック用
 DIST_MIN_VALUE, CONDITION_MIN_VALUE, CONDITION_MAX_VALUE = 0, 0, 100 #0km, 0~100%
@@ -27,23 +44,49 @@ class DefaultModel:
         )
 
         self.model = model
+        self.optimizer = optim.Adam(model.parameters(), lr=0.01) #重み(傾き)とバイアス(切片)をパラメータで取得
+
+    def load_pt_model(self) -> bool:
+        if not MODEL_PATH.exists():
+            return False
+
+        try:
+            checkpoint = torch.load(MODEL_PATH, weights_only= True)
+            self.model.load_state_dict(checkpoint[MODEL_STATE])
+            self.optimizer.load_state_dict(checkpoint[OPTIM_STATE])
+            self.epoch = checkpoint[EPOCH_CNT]
+        except Exception:
+            return False # checkpoint.pt のフォーマット不備などに対応
+        return True
     
-    def trainingDone(self, distance_conditions_Tensor, runningDists_Tensor):
+    def trainingDone(
+        self,
+        distance_conditions_Tensor,
+        runningDists_Tensor,
+        model_setup: bool = False # load_pt_modelがFalseだった場合は.ptファイルを作成
+    ):
         #学習方法を定義
-        model = self.model
-        optimizer = optim.Adam(model.parameters(), lr=0.01) #重み(傾き)とバイアス(切片)をパラメータで取得
         loss_fn = nn.MSELoss()
         
         #機械学習開始
-        trainingCnt = 500
-        for _ in range(trainingCnt):
-            pred = model(distance_conditions_Tensor) #モデルの予測値（出力）を取得
+        epoch = SETUP_EPOCH if model_setup else ADD_TRAIN_EPOCH
+        for _ in range(epoch):
+            pred = self.model(distance_conditions_Tensor) #モデルの予測値（出力）を取得
             loss = loss_fn(pred, runningDists_Tensor) #正解との誤差を取得
-            optimizer.zero_grad()  # 勾配(.grad)をリセット ※.gradはtorch内の共有メモリに保持されるため、torchに属するモジュールやオブジェクトは参照可能
+            self.optimizer.zero_grad()  # 勾配(.grad)をリセット ※.gradはtorch内の共有メモリに保持されるため、torchに属するモジュールやオブジェクトは参照可能
             loss.backward()        # [正解との誤差]/ [重み] = 勾配(.grad) ※厳密には違うが、横軸方向の誤差?x軸を勾配(.grad)だけ動かせば誤差を補正可能
-            optimizer.step()       # [勾配(.grad)]*[学習率(lr)]を重みに加算し、更新 ※重み(傾き)増減させて正解に近づける
+            self.optimizer.step()       # [勾配(.grad)]*[学習率(lr)]を重みに加算し、更新 ※重み(傾き)増減させて正解に近づける
         
-        self.model = model
+        # 結果を保存
+        self.epoch = epoch if model_setup else self.epoch + epoch
+        torch.save(
+            {
+                MODEL_STATE: self.model.state_dict(),
+                OPTIM_STATE: self.optimizer.state_dict(),
+                EPOCH_CNT: self.epoch
+            },
+            MODEL_PATH
+        )
     
     def inference(self, distance, condition):
         #入力制限を満たすか確認する

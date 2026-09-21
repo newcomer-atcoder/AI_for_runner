@@ -49,9 +49,6 @@ def exitEntry():
     #DB更新
     dbFacade.insert_into_db()
 
-    #dbFacadeに一時保存したデータをリフレッシュ
-    dbFacade.refresh_rundata()
-
     #更新後のメッセージ
     entry_status = 'NoData'\
         if dbFacade.isNodata() else 'EntryDone'
