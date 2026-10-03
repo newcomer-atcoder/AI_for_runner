@@ -1,53 +1,33 @@
 #自作モジュール
-from .apiSettings import inference_html, inference_path, save_schedule_path
-from .apiSettings import htmlTemp
-from .apiSettings import aiFacade, dbFacade
+from .apiSettings import init_path, inference_path, save_schedule_path, prepare_model_path
+from .apiSettings import aiFacade, dbFacade, prepareModel
 
 #APIライブラリ
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, status
+from fastapi.responses import RedirectResponse
 
 #その他標準モジュール
 import re
 
 ######################################################
 #
-#以下にapp_inference画面機能を定義しておく
+#以下に推論タブのAPIを定義しておく
 #
 #######################################################
 
-##app_initからapp_inference画面にリダイレクト
+#旧 /inference/ 画面は、メイン画面の推論タブ(/?tab=inference)へリダイレクト
 inferenceRouter = APIRouter()
-@inferenceRouter.get(inference_path, response_class=HTMLResponse)
-def goto_nextPage(request : Request, result=None):
-    if result == None:
-        # 既存の機械学習モデルをロード
-        load_success = aiFacade.load_pt_model()
+@inferenceRouter.get(inference_path)
+def redirect_inference():
+    return RedirectResponse(f'{init_path}?tab=inference', status_code=status.HTTP_303_SEE_OTHER)
 
-        # entryページから遷移後に、登録したデータのリフレッシュを実行
-        add_train_data = dbFacade.refresh_rundata()
+#推論タブを開いたときに呼ばれ、モデルを推論できる状態にする(必要に応じて初期学習)
+@inferenceRouter.post(prepare_model_path)
+def prepareModelApi():
+    return {'prepare_result' : prepareModel()}
 
-        # .ptファイルが見つからない場合は、学習モデル生成
-        if not load_success:
-            print('機械学習モデルをセットアップ')
-            (engine, RunDist) = dbFacade.getDBAccessInfo()
-            aiFacade.load_TrainingData(engine, RunDist)
-            aiFacade.trainingDone()
-        elif len(add_train_data):
-            print('追加でモデルトレーニングを実施')
-            (engine, RunDist) = dbFacade.getDBAccessInfo()
-            aiFacade.load_TrainingData(engine, RunDist, len(add_train_data))
-            aiFacade.addTrain()
-
-    return_dict = {'request' : request, 'result' : '' if result is None else result}
-    return htmlTemp.TemplateResponse(
-        inference_html,
-        return_dict
-    )
-
-
-#app_inference画面のkm, 体調の入力を受ける
-#422例外はjsで吸収あと、goto_nextPage関数に"/inference/?result=入力エラー"として飛ばす
+#推論タブのkm, 体調の入力を受ける
+#422例外はjsで吸収する
 @inferenceRouter.post(inference_path)
 def inference(distance : float, condition : float):
     result_value = aiFacade.inference(distance, condition)
@@ -57,23 +37,29 @@ def inference(distance : float, condition : float):
         result_info = f'本日のあなたの適正距離(km)：{result_value}km'
     result_info += f'(あなたの入力：{distance}km＆{condition}%)'
     return {
-            'inference_result' : result_info
+            'inference_result' : result_info,
+            'inference_ok' : result_value is not None,
     }
 
 #AIの推論結果を、次の予定として記録
 inference_result_nums = 3
 isSaved = '保存しました(AIの予測：{}km, 入力値：{}km, {}%)'
-isNotSaved = '推進をやり直してください'
+isNotSaved = '推論をやり直してください'
 @inferenceRouter.post(save_schedule_path)
 def saveAsSchedule(saveInfo : str):
     nums = re.findall(r'([0-9]+\.[0-9]+)', saveInfo)
-    
+
     if len(nums) == inference_result_nums:
         #AIの推論結果と入力値、併せて3点を読み込み次の予定として記録する
         result = isSaved.format(*nums)
         dbFacade.saveAsSchedule(*nums)
-    else:
-        #AIの推論結果と入力値、併せて3点を取得できなければ、推論をやり直す
-        result = isNotSaved
-    
-    return {'result' : result}
+        s = dbFacade.getSchedule()
+        return {
+            'result' : result,
+            'schedule' : {
+                'yyyy' : s['yyyy'], 'mm' : s['mm'], 'dd' : s['dd'],
+                'distance' : s['distance'], 'condition' : s['condition'], 'runningDist' : s['runningDist'],
+            },
+        }
+    #AIの推論結果と入力値、併せて3点を取得できなければ、推論をやり直す
+    return {'result' : isNotSaved}

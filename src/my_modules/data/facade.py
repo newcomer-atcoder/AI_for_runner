@@ -40,6 +40,10 @@ class DBFacade:
     def refresh_rundata(self):
         return self.entry.refresh_rundata()
 
+    #self.entryに一時保存した(未確定の)データ件数を返す
+    def getPendingCount(self) -> int:
+        return len(self.entry.checkedValueList)
+
     #self.entryに保管されたデータを登録
     def insert_into_db(self):
         self.entry.insert_into_db(self.setup.engine, RunDist)
