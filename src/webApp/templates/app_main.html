@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>AI_for_runner</title>
+  <link rel="stylesheet" href="{{url_for('url_static', path='app_main.css')}}">
+</head>
+<body data-initial-tab="{{initial_tab}}" data-record-exists="{{record_exists}}" data-pending-cnt="{{pending_cnt}}">
+
+  <!-- ランナーシルエット（背景） -->
+  <div class="runner-bg runner-1">
+    <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="13" r="11"/>
+      <path d="M63,24 C57,30 53,43 49,62 L58,65 C60,48 66,35 70,28 Z"/>
+      <path d="M65,33 L79,55 L83,52 L69,30 Z"/>
+      <path d="M62,30 L46,19 L44,23 L60,35 Z"/>
+      <path d="M49,62 L39,84 L28,101 L35,104 L47,87 L58,65 Z"/>
+      <path d="M54,63 L58,87 L66,103 L73,100 L66,83 L62,61 Z"/>
+    </svg>
+  </div>
+  <div class="runner-bg runner-2">
+    <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="13" r="11"/>
+      <path d="M63,24 C57,30 53,43 49,62 L58,65 C60,48 66,35 70,28 Z"/>
+      <path d="M65,33 L79,55 L83,52 L69,30 Z"/>
+      <path d="M62,30 L46,19 L44,23 L60,35 Z"/>
+      <path d="M49,62 L39,84 L28,101 L35,104 L47,87 L58,65 Z"/>
+      <path d="M54,63 L58,87 L66,103 L73,100 L66,83 L62,61 Z"/>
+    </svg>
+  </div>
+  <div class="runner-bg runner-3">
+    <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="13" r="11"/>
+      <path d="M63,24 C57,30 53,43 49,62 L58,65 C60,48 66,35 70,28 Z"/>
+      <path d="M65,33 L79,55 L83,52 L69,30 Z"/>
+      <path d="M62,30 L46,19 L44,23 L60,35 Z"/>
+      <path d="M49,62 L39,84 L28,101 L35,104 L47,87 L58,65 Z"/>
+      <path d="M54,63 L58,87 L66,103 L73,100 L66,83 L62,61 Z"/>
+    </svg>
+  </div>
+  <div class="runner-bg runner-4">
+    <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="13" r="11"/>
+      <path d="M63,24 C57,30 53,43 49,62 L58,65 C60,48 66,35 70,28 Z"/>
+      <path d="M65,33 L79,55 L83,52 L69,30 Z"/>
+      <path d="M62,30 L46,19 L44,23 L60,35 Z"/>
+      <path d="M49,62 L39,84 L28,101 L35,104 L47,87 L58,65 Z"/>
+      <path d="M54,63 L58,87 L66,103 L73,100 L66,83 L62,61 Z"/>
+    </svg>
+  </div>
+  <div class="runner-bg runner-5">
+    <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="63" cy="13" r="11"/>
+      <path d="M63,24 C57,30 53,43 49,62 L58,65 C60,48 66,35 70,28 Z"/>
+      <path d="M65,33 L79,55 L83,52 L69,30 Z"/>
+      <path d="M62,30 L46,19 L44,23 L60,35 Z"/>
+      <path d="M49,62 L39,84 L28,101 L35,104 L47,87 L58,65 Z"/>
+      <path d="M54,63 L58,87 L66,103 L73,100 L66,83 L62,61 Z"/>
+    </svg>
+  </div>
+
+  <!-- オーバーレイ・ダイアログの表示中は、#app を inert にして操作を止める -->
+  <div id="app">
+    <header class="header">
+      <div class="header-left">
+        <span class="logo">🏃AI_for_runner</span>
+        <nav class="tabs" role="tablist">
+          <button type="button" class="tab" role="tab" data-tab="entry" aria-controls="panel-entry">
+            登録<span id="pending-badge" class="badge" hidden></span>
+          </button>
+          <button type="button" class="tab" role="tab" data-tab="inference" aria-controls="panel-inference">推論</button>
+        </nav>
+      </div>
+      <div class="header-right">
+        <button type="button" class="btn btn-int-code" onclick="window.location.href='/intcode/'">管理画面</button>
+        <button type="button" class="btn btn-exit" onclick="openExitDialog()">アプリ終了</button>
+      </div>
+    </header>
+
+    <main class="center-wrapper">
+
+      <!-- 登録タブ -->
+      <section id="panel-entry" class="tab-panel" role="tabpanel">
+        <div class="title">🏃過去のランニング記録を登録します</div>
+
+        <form id="entry-form" onsubmit="entry_runData(event)">
+          <div class="form-box">
+            <div class="message-title">◆入力画面</div>
+
+            <div class="form-row">
+              <label>日付 :</label>
+              <input id="entry-date" type="date" value="{{schedule_date}}" required>
+            </div>
+
+            <div class="form-row">
+              <label>走行予定の距離 :</label>
+              <input id="entry-distance" type="number" min="0" step="any" value="{{schedule.distance}}" required>
+              <span class="unit">km</span>
+            </div>
+
+            <div class="form-row">
+              <label>体調 :</label>
+              <input id="entry-condition" type="number" min="0" max="100" step="any" value="{{schedule.condition}}" required>
+              <span class="unit">%</span>
+            </div>
+
+            <div class="form-row">
+              <label>実際に走った距離 :</label>
+              <input id="entry-runningDist" type="number" min="0" step="any" value="{{schedule.runningDist}}" required>
+              <span class="unit">km</span>
+            </div>
+
+            <input type="hidden" id="fromSchedule" value="{{fromSchedule}}">
+
+            <div class="buttons">
+              <button type="submit" class="btn btn-register">登録</button>
+              <button type="button" id="btn-cancel" class="btn btn-danger" onclick="cancelEntry()" disabled>取り消し</button>
+              <button type="button" id="btn-finish" class="btn btn-finish" onclick="exitEntry()">登録終了&amp;学習</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- 登録メッセージ -->
+        <div class="message-box">
+          <div class="message-title">◆登録メッセージ</div>
+          <div id="entry-message" class="message" role="status"></div>
+        </div>
+      </section>
+
+      <!-- 推論タブ -->
+      <section id="panel-inference" class="tab-panel" role="tabpanel" hidden>
+        <div class="title">🏃本日のあなたの走行距離(km)を算出します</div>
+
+        <form id="inference-form" onsubmit="inference_your_distance(event)">
+          <div class="form-box">
+            <div class="message-title">◆入力画面</div>
+
+            <div class="form-row">
+              <label>走行予定の距離 :</label>
+              <input id="inference-distance" type="number" min="0" step="any" required>
+              <span class="unit">km</span>
+            </div>
+
+            <div class="form-row">
+              <label>体調 :</label>
+              <input id="inference-condition" type="number" min="0" max="100" step="any" required>
+              <span class="unit">%</span>
+            </div>
+
+            <div class="buttons">
+              <button type="submit" class="btn btn-inference">AI実行</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- AIの回答 -->
+        <div class="message-box">
+          <div class="message-title">◆AIの回答</div>
+          <div id="inference-message" class="message" role="status"></div>
+          <div class="buttons">
+            <button type="button" id="btn-save" class="btn btn-save" onclick="saveAsSchedule()" disabled>予定として保存</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- トースト(右上・3秒で消える) -->
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <!-- 学習中・計算中のオーバーレイ -->
+  <div id="overlay" class="overlay" hidden>
+    <div class="overlay-panel">
+      <div class="spinner"></div>
+      <p id="overlay-text"></p>
+    </div>
+  </div>
+
+  <!-- アプリ終了の確認ダイアログ -->
+  <dialog id="exit-dialog">
+    <p class="dialog-title">アプリを終了しますか？</p>
+    <p id="exit-warning" class="dialog-warning" hidden></p>
+    <div class="buttons">
+      <button type="button" class="btn" onclick="closeExitDialog()">キャンセル</button>
+      <button type="button" id="btn-exit-confirm" class="btn btn-exit" onclick="confirmExitApp()">終了</button>
+    </div>
+  </dialog>
+
+  <script src="{{url_for('url_static', path='commonFuncs.js')}}"></script>
+  <script src="{{url_for('url_static', path='app_tabs.js')}}"></script>
+  <script src="{{url_for('url_static', path='app_entry_funcs.js')}}"></script>
+  <script src="{{url_for('url_static', path='app_inference_funcs.js')}}"></script>
+</body>
+</html>

@@ -1,40 +1,56 @@
-//実際に走る距離(km)」の推論
-const inference_your_distance = async() => {
-    distance = document.getElementById("distance").value;
-    condition = document.getElementById("condition").value;
+//最後に成功した推論結果の文字列 (D4.2)
+let lastInferenceResult = null;
 
-    const res = await fetch(
-        "/inference/?distance=" + distance + "&condition=" + condition,
-        {
-            method : "POST",
-            headers : {"Content-Type" : "application/json"},
-        }
-    );
+//「実際に走る距離(km)」の推論
+const inference_your_distance = async(event) => {
+    event.preventDefault();   //ブラウザの検証(required/min/max)を通過した場合だけ、ここに来る
+    const distance = document.getElementById('inference-distance').value;
+    const condition = document.getElementById('inference-condition').value;
 
-    //入力エラー
+    const res = await withOverlay('AIが計算中です…', () => fetch(
+        `/inference/?distance=${encodeURIComponent(distance)}&condition=${encodeURIComponent(condition)}`,
+        {method : 'POST', headers : {'Content-Type' : 'application/json'}}
+    ));
+
     if(res.status == 422){
-        window.location.href = "/inference/?result=入力エラー";
+        showMessage('inference-message', '入力エラー', 'ng');
+        return;
     }
-    //正常入力
-    else{
-        const result = await res.json();
-        window.location.href = "/inference/?result=" + result.inference_result;
+    if(!res.ok){
+        showMessage('inference-message', '推論に失敗しました（サーバエラー）', 'ng');
+        return;
+    }
+    const result = await res.json();
+    showMessage('inference-message', result.inference_result, result.inference_ok ? 'ok' : 'ng');
+    if(result.inference_ok){
+        lastInferenceResult = result.inference_result;
+        document.getElementById('btn-save').disabled = false;
     }
 }
 
-//推論結果を、次の走行予定として保存する機能
+//推論結果を次の走行予定として保存 (D4)
 const saveAsSchedule = async() => {
-    //保存機能を呼び出す
-    const saveInfo = document.querySelector('.message-area input[type="text"]').value;
-    const res = await fetch(
-        "/save/?saveInfo=" + saveInfo,
-        {
-            method : "POST",
-        }
-    );
-
-    //推論画面に戻る
+    if(!lastInferenceResult) return;
+    const res = await fetch('/save/?saveInfo=' + encodeURIComponent(lastInferenceResult), {method : 'POST'});
+    if(!res.ok){
+        showMessage('inference-message', '予定の保存に失敗しました（サーバエラー）', 'ng');
+        return;
+    }
     const item = await res.json();
-    const result = item.result;
-    window.location.href = "/inference/?result=" + result;
+    if(item.schedule){
+        showMessage('inference-message', item.result, 'ok');
+        applySchedule(item.schedule);   //登録タブのフォームを上書き (D4.3)。タブは切り替えない
+    }else{
+        showMessage('inference-message', item.result, 'ng');
+    }
+}
+
+//保存した予定を登録フォームに反映 (D4.3)
+const applySchedule = (s) => {
+    document.getElementById('entry-date').value =
+        `${s.yyyy}-${String(s.mm).padStart(2, '0')}-${String(s.dd).padStart(2, '0')}`;
+    document.getElementById('entry-distance').value = s.distance;
+    document.getElementById('entry-condition').value = s.condition;
+    document.getElementById('entry-runningDist').value = s.runningDist;
+    document.getElementById('fromSchedule').value = '1';
 }

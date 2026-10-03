@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'next':  page += 1;            render(); break;
             case 'last':  page = lastPageNum(); render(); break;
             case 'add':   addRecord();                    break;
-            case 'back':  window.location.href = '/entry/'; break; //登録画面へ戻る
+            case 'back':  window.location.href = '/?tab=entry'; break; //登録タブへ戻る (D5.2)
         }
     });
 
