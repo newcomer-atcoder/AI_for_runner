@@ -232,6 +232,10 @@ body {
   background-color: #7a1e1e;
 }
 
+.btn-exit-cancel {
+  background-color: #080ceb;
+}
+
 .btn-int-code {
   background-color: #1a5c2a;
 }

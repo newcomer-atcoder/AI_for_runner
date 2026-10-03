@@ -4,8 +4,10 @@ let lastInferenceResult = null;
 //「実際に走る距離(km)」の推論
 const inference_your_distance = async(event) => {
     event.preventDefault();   //ブラウザの検証(required/min/max)を通過した場合だけ、ここに来る
-    const distance = document.getElementById('inference-distance').value;
-    const condition = document.getElementById('inference-condition').value;
+    const distance_dom = document.getElementById('inference-distance');
+    const condition_dom = document.getElementById('inference-condition');
+    const distance = distance_dom.value;
+    const condition = condition_dom.value;
 
     const res = await withOverlay('AIが計算中です…', () => fetch(
         `/inference/?distance=${encodeURIComponent(distance)}&condition=${encodeURIComponent(condition)}`,
@@ -25,6 +27,10 @@ const inference_your_distance = async(event) => {
     if(result.inference_ok){
         lastInferenceResult = result.inference_result;
         document.getElementById('btn-save').disabled = false;
+
+        // 入力欄Clear
+        distance_dom.value = null;
+        condition_dom.value = null;
     }
 }
 
